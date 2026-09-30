@@ -4,7 +4,7 @@
 
 El primer incremento prioriza macOS. `src/edutictac/platform/macos-clicks.ts` conecta un módulo nativo pequeño con el hub y reutiliza los overlays existentes; `src/edutictac/clicks/ClickEffects.tsx` dibuja los ripples. La preferencia queda en `edutictacClicks`. El addon escucha únicamente mouse-down izquierdo, derecho y central mediante un event tap `listenOnly`, devuelve cada evento original sin alterarlo y no declara ni selecciona eventos de teclado.
 
-La compilación TypeScript y el build del renderer/main pasan en Linux, donde se compila el stub no compatible. El addon macOS y el permiso Input Monitoring todavía necesitan compilación y prueba real en el Mac antes de considerar esta fase lista. Windows, X11 y Wayland siguen pendientes/no disponibles.
+La compilación TypeScript y el build Linux pasan; el addon nativo también se compiló en el Mac y el usuario confirmó que el ripple funciona tras conceder Input Monitoring. Aún falta validar varios monitores y Retina. Windows y X11 están pendientes; Wayland no ofrece una API pasiva universal y queda no disponible.
 
 ## Qué falta
 
@@ -25,25 +25,24 @@ Electron no ofrece un evento global de botón del ratón. La opción `forward` d
 
 ## Diseño del módulo
 
-La animación será un consumidor sin permisos: recibe `{button, x, y, timestamp}` ya normalizado, selecciona el overlay correspondiente por pantalla y dibuja un ripple/flash en una capa propia con `pointer-events: none`. El hook emite únicamente al pulsar, no registra historial y no guarda coordenadas. No llama APIs de síntesis de entrada ni altera eventos. Las preferencias (estilo, colores por botón, diámetro, duración, opacidad y etiquetas opcionales) se guardan bajo `edutictac.clicks`.
+La animación es un consumidor sin permisos: recibe `{button, x, y, id}` ya normalizado, selecciona el overlay correspondiente por pantalla y dibuja un ripple en una capa propia con `pointer-events: none`. El hook emite únicamente al pulsar, no registra historial y no guarda coordenadas. No llama APIs de síntesis de entrada ni altera eventos. Las preferencias se guardan bajo `edutictacClicks`.
 
 La activación debe ser explícita y bajo demanda. Iniciar el proveedor al activar Click Effects; detenerlo y liberar recursos al desactivar/cerrar. En macOS consultar el estado de Input Monitoring y mostrar instrucciones del sistema únicamente al activar; no pedir permiso durante el inicio general de la app. En Windows y X11 comprobar resultado de instalación/inicio y mostrar estado no disponible cuando falla.
 
 ## Orden de implementación
 
-1. Compilar el addon en macOS y validar el permiso Input Monitoring desde el primer uso; confirmar que cada clic sigue llegando a la aplicación inferior.
-2. Validar coordenadas en Retina y en una configuración con varios monitores; el punto Quartz debe coincidir con las coordenadas DIP de Electron.
-3. Añadir prueba unitaria de normalización y preferencias, y ajustar detalles visuales según la prueba en pantalla.
-4. Adaptador Windows `WH_MOUSE_LL` que siempre reenvíe el evento.
-5. Adaptador X11 X RECORD, condicionado a disponibilidad; Wayland queda expresamente no disponible.
-6. Panel de opciones, pruebas unitarias de normalización/settings y smoke test por sistema/monitor.
+1. Validar coordenadas en Retina y en una configuración con varios monitores; el punto Quartz debe coincidir con las coordenadas DIP de Electron.
+2. Añadir prueba unitaria de normalización y preferencias, y ajustar detalles visuales según la prueba en pantalla.
+3. Adaptador Windows `WH_MOUSE_LL` que siempre reenvíe el evento.
+4. Adaptador X11 X RECORD, condicionado a disponibilidad; Wayland queda expresamente no disponible.
 
-Las fuentes nativas requieren decidir y validar cómo compilar/empacar el código en CI macOS, Windows y Linux. No añadir un addon Node que incluya captura de teclado ni arrancar helpers privilegiados.
+El addon macOS se compila como binario universal durante `prebuild` y se incluye fuera de ASAR; electron-builder no rehace dependencias nativas en Python del sistema. No añadir un addon Node que incluya captura de teclado ni arrancar helpers privilegiados.
 
 ## Fuentes técnicas
 
 - [Electron: ventanas click-through y forwarding](https://www.electronjs.org/docs/latest/tutorial/custom-window-interactions): `forward` reenvía movimiento en macOS/Windows.
 - [Apple: `CGEventTapCreate`](https://developer.apple.com/documentation/coregraphics/cgevent/tapcreate%28tap%3Aplace%3Aoptions%3Aeventsofinterest%3Acallback%3Auserinfo%3A): permite un tap listen-only con una máscara acotada; el permiso de Input Monitoring aplica al monitoreo de eventos.
+- [Apple: `IOHIDRequestAccess`](https://developer.apple.com/documentation/iokit/3181574-iohidrequestaccess): solicita Input Monitoring y registra la app para que se pueda autorizar en Ajustes del Sistema.
 - [Apple WWDC: privacidad de eventos](https://developer.apple.com/videos/play/wwdc2019/701/): describe la autorización para taps de escucha frente a taps que modifican eventos.
 - [Microsoft: `LowLevelMouseProc`](https://learn.microsoft.com/en-us/windows/win32/winmsg/lowlevelmouseproc): detalla botones mouse-down y recomienda pasar eventos sin procesar con `CallNextHookEx`.
 - [X.Org: X Record Extension](https://www.x.org/docs/Xext/record.pdf): protocolo para registrar eventos del servidor X, incluidos eventos de botones.
