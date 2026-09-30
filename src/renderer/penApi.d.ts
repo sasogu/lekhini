@@ -17,6 +17,10 @@ import type {
 declare global {
   interface Window {
     pen: {
+      cursor: {
+        supported(): Promise<boolean>;
+        onPosition(cb: (point: { x: number; y: number } | null) => void): () => void;
+      };
       hub: {
         get(): Promise<unknown>;
         update(patch: HubStateUpdate): Promise<unknown>;

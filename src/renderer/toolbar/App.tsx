@@ -104,6 +104,7 @@ const DEFAULT_MODEL: Record<CloudProviderId, string> = {
 type PanelKind = 'permission' | 'error';
 
 interface HubSnapshot {
+  edutictacCursor: { enabled: boolean; color: string; size: number; opacity: number; shape: 'ring' | 'dot' };
   activeTool: ToolId;
   drawMode: boolean;
   settings: ToolSettings;
@@ -190,7 +191,9 @@ function shortenPath(p: string, max = 56): string {
 }
 
 export function ToolbarApp() {
+  const [cursorSupported, setCursorSupported] = createSignal(true);
   const [hub, setHub] = createSignal<HubSnapshot>({
+    edutictacCursor: { enabled: false, color: '#ff3b30', size: 44, opacity: 0.85, shape: 'ring' },
     activeTool: 'pencil',
     drawMode: false,
     settings: { color: '#3a3a3c', width: 3, opacity: 1 },
@@ -406,6 +409,7 @@ export function ToolbarApp() {
   });
 
   onMount(() => {
+    void window.pen.cursor.supported().then(setCursorSupported);
     void window.pen.hub.get().then((state) => {
       const s = state as HubSnapshot;
       setHub(s);
@@ -1284,6 +1288,50 @@ export function ToolbarApp() {
                     );
                   }}
                 </For>
+              </div>
+            </div>
+
+            <div class="settings-section">
+              <div class="settings-section-label">EduTicTac / Cursor</div>
+              <div class="settings-row">
+                <span class="settings-row-label">Cursor highlight</span>
+                <button
+                  class={`settings-toggle ${hub().edutictacCursor.enabled ? 'on' : ''}`}
+                  disabled={!cursorSupported()}
+                  title={cursorSupported() ? 'Show a highlight around the pointer' : 'Global cursor position is unavailable on native Wayland'}
+                  onClick={() => void window.pen.hub.update({ edutictacCursor: { enabled: !hub().edutictacCursor.enabled } })}
+                >
+                  <span>{cursorSupported() ? (hub().edutictacCursor.enabled ? 'On' : 'Off') : 'Unavailable'}</span>
+                </button>
+              </div>
+              <div class="settings-row">
+                <span class="settings-row-label">Style</span>
+                <select
+                  class="settings-toggle"
+                  value={hub().edutictacCursor.shape}
+                  disabled={!cursorSupported()}
+                  onChange={(e) => void window.pen.hub.update({ edutictacCursor: { shape: e.currentTarget.value as 'ring' | 'dot' } })}
+                >
+                  <option value="ring">Ring</option>
+                  <option value="dot">Dot</option>
+                </select>
+              </div>
+              <div class="settings-row settings-row-stack">
+                <span class="settings-row-label">Size · {hub().edutictacCursor.size}px</span>
+                <input type="range" min="16" max="120" step="2" value={hub().edutictacCursor.size}
+                  disabled={!cursorSupported()}
+                  onInput={(e) => void window.pen.hub.update({ edutictacCursor: { size: Number(e.currentTarget.value) } })} />
+              </div>
+              <div class="settings-row">
+                <span class="settings-row-label">Color</span>
+                <input type="color" value={hub().edutictacCursor.color} disabled={!cursorSupported()}
+                  onInput={(e) => void window.pen.hub.update({ edutictacCursor: { color: e.currentTarget.value } })} />
+              </div>
+              <div class="settings-row settings-row-stack">
+                <span class="settings-row-label">Opacity · {Math.round(hub().edutictacCursor.opacity * 100)}%</span>
+                <input type="range" min="10" max="100" step="5" value={hub().edutictacCursor.opacity * 100}
+                  disabled={!cursorSupported()}
+                  onInput={(e) => void window.pen.hub.update({ edutictacCursor: { opacity: Number(e.currentTarget.value) / 100 } })} />
               </div>
             </div>
 

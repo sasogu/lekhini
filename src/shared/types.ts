@@ -146,6 +146,7 @@ export interface PerToolWidth {
 export type Orientation = 'h' | 'v';
 
 export type HubStateUpdate = {
+  edutictacCursor?: Partial<{ enabled: boolean; color: string; size: number; opacity: number; shape: 'ring' | 'dot' }>;
   activeTool?: ToolId;
   drawMode?: boolean;
   settings?: Partial<ToolSettings>;
@@ -334,6 +335,8 @@ export type IpcChannel =
   | 'hub:state:get'
   | 'hub:state:update'
   | 'hub:state:broadcast'
+  | 'edutictac:cursor-position'
+  | 'edutictac:cursor-supported'
   | 'overlay:undo'
   | 'overlay:redo'
   | 'overlay:clear'

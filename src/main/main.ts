@@ -13,6 +13,7 @@ import { registerPermissionsIpc } from './permissions';
 import { registerCaptureIpc } from './capture';
 import { registerAiIpc } from './ai/ipc';
 import { registerRagIpc } from './ai/ragIpc';
+import { registerCursorTracker } from '../edutictac/cursor/tracker';
 import { shutdown as shutdownOllama } from './ai/ollamaService';
 import { initAutoUpdates, registerUpdaterIpc } from './updater';
 import {
@@ -43,6 +44,7 @@ app.whenReady().then(async () => {
   hydrateFromPersistence();
 
   registerHubIpc();
+  registerCursorTracker();
   registerOverlayIpc();
   registerPermissionsIpc();
   registerCaptureIpc();

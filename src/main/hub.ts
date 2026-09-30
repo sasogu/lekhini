@@ -20,6 +20,7 @@ import type {
 } from '../shared/types';
 
 export interface HubState {
+  edutictacCursor: { enabled: boolean; color: string; size: number; opacity: number; shape: 'ring' | 'dot' };
   activeTool: ToolId;
   drawMode: boolean;
   settings: ToolSettings;
@@ -69,6 +70,7 @@ export interface HubState {
 }
 
 const state: HubState = {
+  edutictacCursor: { ...PERSISTED_DEFAULTS.edutictacCursor },
   activeTool: 'pencil',
   drawMode: false,
   settings: { ...DEFAULT_SETTINGS },
@@ -153,6 +155,14 @@ const VALID_TOOLS = new Set<ToolId>([
 // cases we fall back to defaults so the app stays usable.
 export function hydrateFromPersistence(): void {
   const p = persisted();
+  const cursor = p.edutictacCursor;
+  state.edutictacCursor = {
+    enabled: cursor?.enabled === true,
+    color: typeof cursor?.color === 'string' && /^#[\da-f]{6}$/i.test(cursor.color) ? cursor.color : PERSISTED_DEFAULTS.edutictacCursor.color,
+    size: typeof cursor?.size === 'number' && Number.isFinite(cursor.size) ? Math.max(16, Math.min(120, cursor.size)) : PERSISTED_DEFAULTS.edutictacCursor.size,
+    opacity: typeof cursor?.opacity === 'number' && Number.isFinite(cursor.opacity) ? Math.max(0.1, Math.min(1, cursor.opacity)) : PERSISTED_DEFAULTS.edutictacCursor.opacity,
+    shape: cursor?.shape === 'dot' ? 'dot' : 'ring',
+  };
   state.orientation = p.orientation;
   state.theme = p.theme;
   state.profile = p.profile;
@@ -229,6 +239,20 @@ export function hydrateFromPersistence(): void {
 
 export function patch(update: HubStateUpdate) {
   const changed = new Set<keyof HubState>();
+
+  if (update.edutictacCursor) {
+    const next = { ...state.edutictacCursor, ...update.edutictacCursor };
+    next.enabled = typeof next.enabled === 'boolean' ? next.enabled : state.edutictacCursor.enabled;
+    next.size = Number.isFinite(next.size) ? Math.max(16, Math.min(120, next.size)) : state.edutictacCursor.size;
+    next.opacity = Number.isFinite(next.opacity) ? Math.max(0.1, Math.min(1, next.opacity)) : state.edutictacCursor.opacity;
+    if (typeof next.color !== 'string' || !/^#[\da-f]{6}$/i.test(next.color)) next.color = state.edutictacCursor.color;
+    if (next.shape !== 'dot') next.shape = 'ring';
+    if (JSON.stringify(next) !== JSON.stringify(state.edutictacCursor)) {
+      state.edutictacCursor = next;
+      changed.add('edutictacCursor');
+      save('edutictacCursor', next);
+    }
+  }
 
   if (update.activeTool !== undefined && update.activeTool !== state.activeTool) {
     state.activeTool = update.activeTool;

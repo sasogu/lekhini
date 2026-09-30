@@ -16,6 +16,11 @@ import type {
 } from '../shared/types';
 
 const api = {
+  cursor: {
+    supported: () => ipcRenderer.invoke('edutictac:cursor-supported' satisfies IpcChannel) as Promise<boolean>,
+    onPosition: (cb: (point: { x: number; y: number } | null) => void) =>
+      bind('edutictac:cursor-position', cb as (v: unknown) => void),
+  },
   hub: {
     get: () => ipcRenderer.invoke('hub:state:get' satisfies IpcChannel),
     update: (patch: HubStateUpdate) =>

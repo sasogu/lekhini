@@ -22,6 +22,12 @@ El proceso principal consulta la posición únicamente mientras la función est�
 
 El ajuste se conserva dentro de una propiedad `edutictac` de `PersistedState`; empezar con habilitado (off), forma, color, diámetro y opacidad con validación de rangos. El preload expone solamente suscripciones/acciones tipadas. No se capturan pantallas ni se observan teclas. El permiso de Accesibilidad de macOS no debe solicitarse para consultar el cursor con Electron; no añadir un event tap/CoreGraphics en este MVP.
 
+## Implementación actual
+
+La primera versión está en `src/edutictac/`. El proceso principal consulta cada 16 ms únicamente mientras la preferencia está activa, envía posiciones solo cuando cambian y solo al overlay de la pantalla bajo el cursor. Desactiva el temporizador al apagar la función o cerrar la aplicación. El renderer muestra anillo o punto sin interceptar entrada. La configuración se persiste y valida tamaño, color y opacidad. No se han añadido dependencias.
+
+La disponibilidad Wayland se determina conservadoramente a partir de la selección explícita Ozone de Electron 32; en una sesión Wayland con hint `auto`, también se marca como no disponible. No se ha verificado en un equipo Wayland real y debe contrastarse en GNOME/KDE/wlroots antes de distribuir. La CI del proyecto no tiene suite de tests; la implementación se validó con typecheck y compilación Vite, no con interacción real multi-monitor.
+
 ### Cambios de integración previstos
 
 Nuevos archivos: `src/edutictac/shared/cursor.ts`, `src/edutictac/platform/cursor-position.ts`, `src/edutictac/cursor/CursorHighlight.tsx` y pruebas de settings/coordenadas. Integraciones upstream necesarias: `src/main/main.ts` para iniciar/detener el proveedor, `src/main/hub.ts` y `src/main/persistence.ts` para settings, `src/main/preload.ts`/`src/shared/types.ts` para IPC, `src/renderer/overlay/App.tsx` para montar la capa y `src/renderer/toolbar/App.tsx` para ajustes. Mantener intacto `src/main/windows/overlay.ts` inicialmente: ya crea los overlays multi-monitor y cada ventana está suscrita al hub.

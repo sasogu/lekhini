@@ -16,6 +16,7 @@ import {
   rasterizeGroup,
 } from './canvas/recognize';
 import { buildTradeAnalysisText } from './canvas/ta';
+import { CursorHighlight } from '../../edutictac/cursor/CursorHighlight';
 import type {
   Calibration,
   Item,
@@ -426,6 +427,7 @@ export function OverlayApp() {
 
   return (
     <div class="overlay-root">
+      <CursorHighlight />
       <Show when={whiteboard() !== 'off'}>
         <div
           class="board"

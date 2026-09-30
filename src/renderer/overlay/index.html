@@ -30,6 +30,21 @@
         inset: 0;
         pointer-events: none;
       }
+      .edutictac-cursor {
+        position: absolute;
+        z-index: 40;
+        transform: translate(-50%, -50%);
+        border: 3px solid currentColor;
+        border-radius: 50%;
+        box-shadow: 0 1px 5px rgba(0, 0, 0, 0.65), inset 0 0 4px rgba(255, 255, 255, 0.3);
+        pointer-events: none;
+        will-change: left, top;
+      }
+      .edutictac-cursor-dot {
+        border: 0;
+        background: currentColor;
+        box-shadow: 0 1px 5px rgba(0, 0, 0, 0.65);
+      }
       .capture-surface {
         position: absolute;
         inset: 0;
