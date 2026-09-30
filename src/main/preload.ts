@@ -22,7 +22,9 @@ const api = {
       bind('edutictac:cursor-position', cb as (v: unknown) => void),
   },
   clicks: {
+    hasPermission: () => ipcRenderer.invoke('edutictac:clicks:status' satisfies IpcChannel) as Promise<boolean>,
     requestAccess: () => ipcRenderer.invoke('edutictac:clicks:request' satisfies IpcChannel) as Promise<boolean>,
+    openSettings: () => ipcRenderer.invoke('edutictac:clicks:open-settings' satisfies IpcChannel) as Promise<void>,
     onClick: (cb: (event: { button: 'left' | 'right' | 'middle'; x: number; y: number; id: string }) => void) =>
       bind('edutictac:click', cb as (v: unknown) => void),
   },

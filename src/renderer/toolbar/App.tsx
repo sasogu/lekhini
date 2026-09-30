@@ -194,6 +194,7 @@ function shortenPath(p: string, max = 56): string {
 export function ToolbarApp() {
   const [cursorSupported, setCursorSupported] = createSignal(true);
   const [clickPermissionPending, setClickPermissionPending] = createSignal(false);
+  const [clickPermissionGranted, setClickPermissionGranted] = createSignal(false);
   const [hub, setHub] = createSignal<HubSnapshot>({
     edutictacCursor: { enabled: false, color: '#ff3b30', size: 44, opacity: 0.85, shape: 'ring' },
     edutictacClicks: { enabled: false, color: '#ff3b30', size: 68, duration: 520, opacity: 0.8, showButton: false },
@@ -413,6 +414,7 @@ export function ToolbarApp() {
 
   onMount(() => {
     void window.pen.cursor.supported().then(setCursorSupported);
+    void window.pen.clicks.hasPermission().then(setClickPermissionGranted);
     void window.pen.hub.get().then((state) => {
       const s = state as HubSnapshot;
       setHub(s);
@@ -1351,13 +1353,28 @@ export function ToolbarApp() {
                       return;
                     }
                     setClickPermissionPending(true);
-                    try { await window.pen.clicks.requestAccess(); }
+                    try {
+                      const granted = await window.pen.clicks.requestAccess();
+                      setClickPermissionGranted(granted);
+                    }
                     finally { setClickPermissionPending(false); }
                   }}>
                   <span>{hub().edutictacClicks.enabled ? 'On' : clickPermissionPending() ? 'Check macOS permission…' : 'Off'}</span>
                 </button>
               </div>
-              <div class="settings-hint">macOS only in this first version. Allow Input Monitoring when macOS asks; if needed, enable Lekhini under System Settings → Privacy &amp; Security → Input Monitoring.</div>
+              <div class="settings-hint">
+                {clickPermissionGranted()
+                  ? 'Input Monitoring is allowed. Clicks are observed locally and never stored.'
+                  : 'macOS only in this first version. Allow Input Monitoring for Lekhini. For npm run dev, macOS may list it as Electron; add node_modules/electron/dist/Electron.app.'}
+              </div>
+              <Show when={!clickPermissionGranted()}>
+                <div class="settings-row">
+                  <span class="settings-row-label">Permission</span>
+                  <button class="settings-toggle" onClick={() => void window.pen.clicks.openSettings()}>
+                    <span>Open Input Monitoring</span>
+                  </button>
+                </div>
+              </Show>
               <div class="settings-row settings-row-stack">
                 <span class="settings-row-label">Size · {hub().edutictacClicks.size}px</span>
                 <input type="range" min="24" max="160" step="4" value={hub().edutictacClicks.size}

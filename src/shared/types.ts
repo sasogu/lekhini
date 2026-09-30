@@ -339,6 +339,8 @@ export type IpcChannel =
   | 'edutictac:cursor-position'
   | 'edutictac:cursor-supported'
   | 'edutictac:clicks:request'
+  | 'edutictac:clicks:status'
+  | 'edutictac:clicks:open-settings'
   | 'edutictac:click'
   | 'overlay:undo'
   | 'overlay:redo'

@@ -158,7 +158,9 @@ declare global {
         onStatus(cb: (s: UpdateStatus) => void): () => void;
       };
       clicks: {
+        hasPermission(): Promise<boolean>;
         requestAccess(): Promise<boolean>;
+        openSettings(): Promise<void>;
         onClick(cb: (event: { button: 'left' | 'right' | 'middle'; x: number; y: number; id: string }) => void): () => void;
       };
       env: {

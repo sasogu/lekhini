@@ -1,4 +1,4 @@
-import { ipcMain, screen, app } from 'electron';
+import { ipcMain, screen, app, shell } from 'electron';
 import { getState, onChange, patch } from '../../main/hub';
 import { getOverlays } from '../../main/windows/overlay';
 
@@ -38,12 +38,18 @@ function sync(): void {
 }
 
 export function registerMacClickObserver(): void {
+  ipcMain.handle('edutictac:clicks:status', () => !!observer && process.platform === 'darwin' && observer.hasPermission());
   ipcMain.handle('edutictac:clicks:request', () => {
     if (!observer || process.platform !== 'darwin') return false;
     if (!observer.hasPermission()) observer.requestPermission();
     const granted = observer.hasPermission();
     if (granted) patch({ edutictacClicks: { enabled: true } });
     return granted;
+  });
+  ipcMain.handle('edutictac:clicks:open-settings', () => {
+    if (process.platform === 'darwin') {
+      return shell.openExternal('x-apple.systempreferences:com.apple.preference.security?Privacy_ListenEvent');
+    }
   });
   onChange((_state, changed) => { if (changed.has('edutictacClicks')) sync(); });
   app.on('will-quit', stop);
