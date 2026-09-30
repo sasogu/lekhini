@@ -14,7 +14,7 @@ su hub, persistencia y overlays multimonitor.
 | Spotlight | Implementada; pendiente de validación visual final | macOS, Windows y X11; desactivada en Wayland nativo | [SPOTLIGHT.md](./SPOTLIGHT.md) |
 | Dock de macOS | Implementado | macOS | [MACOS_DEVELOPMENT.md](./MACOS_DEVELOPMENT.md) |
 | Firma estable de desarrollo | Configurada en el Mac de pruebas | macOS | [MACOS_DEVELOPMENT.md](./MACOS_DEVELOPMENT.md) |
-| Magnifier | No implementada | Investigación pendiente | — |
+| Magnifier | Diseño de captura terminado; implementación pendiente | ScreenCaptureKit priorizado en macOS | [MAGNIFIER.md](./MAGNIFIER.md) |
 | Keystrokes | No implementada | Pendiente; debe evitar captura de texto | — |
 | Teacher Mode | No implementada | Pendiente | — |
 | Presets EduTicTac | No implementados | Pendiente | — |
@@ -120,4 +120,3 @@ Consulta [PRIVACY_EDUTICTAC.md](./PRIVACY_EDUTICTAC.md) para el detalle.
 Spotlight requiere todavía una revisión visual manual en macOS, especialmente
 con varios monitores y Retina. Windows, X11 y Wayland no se han probado aún en
 hardware dentro de esta rama.
-

@@ -11,6 +11,7 @@ online e IA que ya ofrece Lekhini.
 | Cursor Highlight | Coordenada actual del puntero | Solo ajustes visuales | Ninguna |
 | Click Effects | Botón y coordenada del último clic durante la animación | Solo ajustes visuales | Ninguna |
 | Spotlight | Coordenada actual o bloqueada | Ajustes visuales; la posición bloqueada no se guarda | Ninguna |
+| Magnifier (planificada) | Frames de una región pequeña mientras esté activa | Ninguna | Ninguna |
 
 Click Effects no escucha teclas, no guarda eventos y no modifica ni impide el
 clic original. Las capas del renderer usan `pointer-events: none`.
@@ -32,4 +33,3 @@ Spotlight oscurece mediante una máscara SVG; no obtiene píxeles del escritorio
 Cursor Highlight consulta la posición global disponible en Electron. Los clics
 se descartan al terminar su animación. Al desactivar una función se detienen
 sus timers o listeners y se eliminan sus elementos visuales.
-

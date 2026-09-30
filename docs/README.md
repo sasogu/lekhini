@@ -5,6 +5,7 @@
 - [Cursor Highlight](./CURSOR_HIGHLIGHT.md)
 - [Click Effects](./CLICK_EFFECTS.md)
 - [Spotlight](./SPOTLIGHT.md)
+- [Diseño de la lupa](./MAGNIFIER.md)
 - [Desarrollo y firma en macOS](./MACOS_DEVELOPMENT.md)
 - [Privacidad de las extensiones](./PRIVACY_EDUTICTAC.md)
 - [Linux: X11 y Wayland](./LINUX_WAYLAND.md)
