@@ -14,7 +14,7 @@ su hub, persistencia y overlays multimonitor.
 | Spotlight | Implementada; pendiente de validación visual final | macOS, Windows y X11; desactivada en Wayland nativo | [SPOTLIGHT.md](./SPOTLIGHT.md) |
 | Dock de macOS | Implementado | macOS | [MACOS_DEVELOPMENT.md](./MACOS_DEVELOPMENT.md) |
 | Firma estable de desarrollo | Configurada en el Mac de pruebas | macOS | [MACOS_DEVELOPMENT.md](./MACOS_DEVELOPMENT.md) |
-| Magnifier | Proveedor nativo compilado; integración Electron pendiente | ScreenCaptureKit en macOS | [MAGNIFIER.md](./MAGNIFIER.md) |
+| Magnifier | Integrada; pendiente de validación visual final | ScreenCaptureKit en macOS; otros proveedores pendientes | [MAGNIFIER.md](./MAGNIFIER.md) |
 | Keystrokes | No implementada | Pendiente; debe evitar captura de texto | — |
 | Teacher Mode | No implementada | Pendiente | — |
 | Presets EduTicTac | No implementados | Pendiente | — |

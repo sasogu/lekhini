@@ -12,7 +12,7 @@ solo mientras esté activa.
 
 ## Decisión para macOS
 
-Usar **ScreenCaptureKit** mediante un addon nativo pequeño. `SCStream` admite
+Usar **ScreenCaptureKit** mediante un proveedor nativo pequeño. `SCStream` admite
 una configuración con `sourceRect`; si no se especifica, captura el display
 entero. La implementación debe fijar siempre una región y una resolución de
 salida acotadas.
@@ -28,7 +28,8 @@ Diseño propuesto:
 5. Recortar dentro del tile en el renderer. Actualizar `sourceRect` cuando el
    cursor se acerque al borde del tile, en vez de reconfigurar el stream en
    cada píxel recorrido.
-6. Limitar inicialmente a 30 FPS, `queueDepth` bajo y un solo frame pendiente;
+6. Limitar inicialmente a 15 FPS, `queueDepth` bajo y procesar únicamente los
+   frames completos;
    descartar frames atrasados.
 7. Detener el stream, liberar buffers y limpiar la lente al desactivar.
 
@@ -100,14 +101,29 @@ Lekhini ya gestiona el panel del permiso; la lupa debe reutilizarlo.
 `native/macos-magnifier/MagnifierCapture.swift` implementa el primer
 incremento. Recibe display, rectángulo, resolución de salida y FPS; crea un
 `SCStream` regional que excluye `org.opensourcebharat.lekhini`; y escribe
-frames BGRA mediante un protocolo binario con cabecera y longitud. Mantiene
+frames RGBA mediante un protocolo binario con cabecera y longitud. Mantiene
 `queueDepth` en 2, no incluye cursor ni audio y libera el stream al recibir
 SIGTERM/SIGINT.
 
-`scripts/build-magnifier-provider.sh` genera un ejecutable universal arm64+x64
+`scripts/build-magnifier-provider.sh` genera un ejecutable universal arm64+x86_64
 en macOS. En otras plataformas crea un stub inactivo para conservar los builds
 existentes. El binario se empaqueta como recurso en `bin/magnifier-capture`.
 
-Todavía no se inicia desde la aplicación: el siguiente incremento añadirá el
-controlador Electron, framing defensivo del stdout y ciclo de tile al cambiar
-de monitor o acercarse a un borde.
+`src/edutictac/magnifier/controller.ts` inicia el proveedor solo cuando la lupa
+está activa. Reutiliza el cursor y los overlays existentes, valida el framing
+de stdout, reinicia el tile cuando el puntero se aproxima a un borde y detiene
+el proceso al desactivar la función o cerrar Lekhini.
+
+`src/edutictac/magnifier/Magnifier.tsx` recibe el tile únicamente en el overlay
+del monitor activo, recorta la región bajo el puntero y dibuja la lente. Los
+ajustes persistentes permiten elegir zoom, diámetro, color y grosor del borde,
+y opacidad. La interfaz solo habilita la función si el proveedor regional está
+disponible.
+
+## Estado de validación
+
+- Compilación y comprobación de tipos superadas en Linux.
+- Proveedor universal y aplicación firmada compilados correctamente en macOS.
+- Firma profunda de la aplicación y firma del proveedor verificadas.
+- Pendiente confirmar visualmente la captura regional, Retina, cambio de
+  monitor y liberación del permiso en el Mac de pruebas.
