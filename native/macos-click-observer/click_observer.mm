@@ -1,4 +1,5 @@
 #import <ApplicationServices/ApplicationServices.h>
+#import <IOKit/hidsystem/IOHIDLib.h>
 #import <napi.h>
 
 #include <atomic>
@@ -54,11 +55,12 @@ void StopWorker() {
 }
 
 Napi::Value HasPermission(const Napi::CallbackInfo& info) {
-  return Napi::Boolean::New(info.Env(), CGPreflightListenEventAccess());
+  return Napi::Boolean::New(info.Env(),
+    IOHIDCheckAccess(kIOHIDRequestTypeListenEvent) == kIOHIDAccessTypeGranted);
 }
 
 Napi::Value RequestPermission(const Napi::CallbackInfo& info) {
-  return Napi::Boolean::New(info.Env(), CGRequestListenEventAccess());
+  return Napi::Boolean::New(info.Env(), IOHIDRequestAccess(kIOHIDRequestTypeListenEvent));
 }
 
 Napi::Value Start(const Napi::CallbackInfo& info) {
@@ -67,7 +69,9 @@ Napi::Value Start(const Napi::CallbackInfo& info) {
     Napi::TypeError::New(env, "callback required").ThrowAsJavaScriptException();
     return env.Undefined();
   }
-  if (!CGPreflightListenEventAccess()) return Napi::Boolean::New(env, false);
+  if (IOHIDCheckAccess(kIOHIDRequestTypeListenEvent) != kIOHIDAccessTypeGranted) {
+    return Napi::Boolean::New(env, false);
+  }
   StopWorker();
   {
     std::lock_guard<std::mutex> lock(setupMutex);
