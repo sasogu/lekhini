@@ -1,1 +1,0 @@
-cmd_Release/click_observer.node := ln -f "Release/obj.target/click_observer.node" "Release/click_observer.node" 2>/dev/null || (rm -rf "Release/click_observer.node" && cp -af "Release/obj.target/click_observer.node" "Release/click_observer.node")

@@ -1,1 +1,0 @@
-cmd_Release/obj.target/click_observer.node := g++ -o Release/obj.target/click_observer.node -shared -pthread -rdynamic -m64  -Wl,-soname=click_observer.node -Wl,--start-group Release/obj.target/click_observer/stub.o -Wl,--end-group 
