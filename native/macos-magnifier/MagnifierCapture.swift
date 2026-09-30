@@ -72,10 +72,23 @@ private final class FrameOutput: NSObject, SCStreamOutput {
         let sourceStride = CVPixelBufferGetBytesPerRow(pixelBuffer)
         let rowBytes = width * 4
 
-        var payload = Data(capacity: rowBytes * height)
-        for row in 0..<height {
-            payload.append(base.advanced(by: row * sourceStride).assumingMemoryBound(to: UInt8.self),
-                           count: rowBytes)
+        // ScreenCaptureKit delivers BGRA. Convert to RGBA here so the
+        // renderer can construct ImageData directly without a per-frame
+        // JavaScript color shuffle.
+        var payload = Data(count: rowBytes * height)
+        payload.withUnsafeMutableBytes { rawDestination in
+            guard let destination = rawDestination.bindMemory(to: UInt8.self).baseAddress else { return }
+            for row in 0..<height {
+                let source = base.advanced(by: row * sourceStride).assumingMemoryBound(to: UInt8.self)
+                let target = destination.advanced(by: row * rowBytes)
+                for column in 0..<width {
+                    let offset = column * 4
+                    target[offset] = source[offset + 2]
+                    target[offset + 1] = source[offset + 1]
+                    target[offset + 2] = source[offset]
+                    target[offset + 3] = source[offset + 3]
+                }
+            }
         }
 
         var packet = Data(frameMagic)

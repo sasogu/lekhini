@@ -17,9 +17,21 @@ import type {
 declare global {
   interface Window {
     pen: {
-    cursor: {
+      cursor: {
         supported(): Promise<boolean>;
         onPosition(cb: (point: { x: number; y: number } | null) => void): () => void;
+      };
+      magnifier: {
+        supported(): Promise<boolean>;
+        onFrame(cb: (frame: {
+          width: number;
+          height: number;
+          pixels: Uint8Array;
+          tileX: number;
+          tileY: number;
+          tileWidth: number;
+          tileHeight: number;
+        } | null) => void): () => void;
       };
       hub: {
         get(): Promise<unknown>;

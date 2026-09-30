@@ -157,6 +157,14 @@ export type HubStateUpdate = {
     dimOpacity: number;
     locked: boolean;
   }>;
+  edutictacMagnifier?: Partial<{
+    enabled: boolean;
+    zoom: 1.5 | 2 | 3 | 4;
+    size: number;
+    borderColor: string;
+    borderWidth: number;
+    opacity: number;
+  }>;
   activeTool?: ToolId;
   drawMode?: boolean;
   settings?: Partial<ToolSettings>;
@@ -351,6 +359,8 @@ export type IpcChannel =
   | 'edutictac:clicks:status'
   | 'edutictac:clicks:open-settings'
   | 'edutictac:click'
+  | 'edutictac:magnifier-supported'
+  | 'edutictac:magnifier-frame'
   | 'overlay:undo'
   | 'overlay:redo'
   | 'overlay:clear'

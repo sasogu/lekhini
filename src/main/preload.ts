@@ -28,6 +28,11 @@ const api = {
     onClick: (cb: (event: { button: 'left' | 'right' | 'middle'; x: number; y: number; id: string }) => void) =>
       bind('edutictac:click', cb as (v: unknown) => void),
   },
+  magnifier: {
+    supported: () => ipcRenderer.invoke('edutictac:magnifier-supported' satisfies IpcChannel) as Promise<boolean>,
+    onFrame: (cb: (frame: unknown) => void) =>
+      bind('edutictac:magnifier-frame', cb as (v: unknown) => void),
+  },
   hub: {
     get: () => ipcRenderer.invoke('hub:state:get' satisfies IpcChannel),
     update: (patch: HubStateUpdate) =>

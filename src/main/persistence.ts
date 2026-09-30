@@ -21,6 +21,14 @@ export interface PersistedState {
     feather: number;
     dimOpacity: number;
   };
+  edutictacMagnifier: {
+    enabled: boolean;
+    zoom: 1.5 | 2 | 3 | 4;
+    size: number;
+    borderColor: string;
+    borderWidth: number;
+    opacity: number;
+  };
   orientation: Orientation;
   theme: Theme;
   profile: ProfileId;
@@ -80,6 +88,14 @@ export const PERSISTED_DEFAULTS: PersistedState = {
     height: 280,
     feather: 28,
     dimOpacity: 0.62,
+  },
+  edutictacMagnifier: {
+    enabled: false,
+    zoom: 2,
+    size: 260,
+    borderColor: '#ffffff',
+    borderWidth: 4,
+    opacity: 1,
   },
   // First-run default is vertical, per design ask. Users can flip to
   // horizontal in Settings and that choice is then remembered.

@@ -15,6 +15,7 @@ import { registerAiIpc } from './ai/ipc';
 import { registerRagIpc } from './ai/ragIpc';
 import { registerCursorTracker } from '../edutictac/cursor/tracker';
 import { registerMacClickObserver } from '../edutictac/platform/macos-clicks';
+import { registerMagnifierController } from '../edutictac/magnifier/controller';
 import { shutdown as shutdownOllama } from './ai/ollamaService';
 import { initAutoUpdates, registerUpdaterIpc } from './updater';
 import {
@@ -46,6 +47,7 @@ app.whenReady().then(async () => {
   registerHubIpc();
   registerCursorTracker();
   registerMacClickObserver();
+  registerMagnifierController();
   registerOverlayIpc();
   registerPermissionsIpc();
   registerCaptureIpc();

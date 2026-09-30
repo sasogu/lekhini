@@ -31,6 +31,14 @@ export interface HubState {
     dimOpacity: number;
     locked: boolean;
   };
+  edutictacMagnifier: {
+    enabled: boolean;
+    zoom: 1.5 | 2 | 3 | 4;
+    size: number;
+    borderColor: string;
+    borderWidth: number;
+    opacity: number;
+  };
   activeTool: ToolId;
   drawMode: boolean;
   settings: ToolSettings;
@@ -83,6 +91,7 @@ const state: HubState = {
   edutictacCursor: { ...PERSISTED_DEFAULTS.edutictacCursor },
   edutictacClicks: { ...PERSISTED_DEFAULTS.edutictacClicks },
   edutictacSpotlight: { ...PERSISTED_DEFAULTS.edutictacSpotlight, locked: false },
+  edutictacMagnifier: { ...PERSISTED_DEFAULTS.edutictacMagnifier },
   activeTool: 'pencil',
   drawMode: false,
   settings: { ...DEFAULT_SETTINGS },
@@ -209,6 +218,31 @@ export function hydrateFromPersistence(): void {
         : PERSISTED_DEFAULTS.edutictacSpotlight.dimOpacity,
     locked: false,
   };
+  const magnifier = p.edutictacMagnifier;
+  const magnifierZoom = magnifier?.zoom;
+  state.edutictacMagnifier = {
+    enabled: magnifier?.enabled === true,
+    zoom:
+      magnifierZoom === 1.5 || magnifierZoom === 2 || magnifierZoom === 3 || magnifierZoom === 4
+        ? magnifierZoom
+        : PERSISTED_DEFAULTS.edutictacMagnifier.zoom,
+    size:
+      typeof magnifier?.size === 'number' && Number.isFinite(magnifier.size)
+        ? Math.max(160, Math.min(420, magnifier.size))
+        : PERSISTED_DEFAULTS.edutictacMagnifier.size,
+    borderColor:
+      typeof magnifier?.borderColor === 'string' && /^#[\da-f]{6}$/i.test(magnifier.borderColor)
+        ? magnifier.borderColor
+        : PERSISTED_DEFAULTS.edutictacMagnifier.borderColor,
+    borderWidth:
+      typeof magnifier?.borderWidth === 'number' && Number.isFinite(magnifier.borderWidth)
+        ? Math.max(0, Math.min(12, magnifier.borderWidth))
+        : PERSISTED_DEFAULTS.edutictacMagnifier.borderWidth,
+    opacity:
+      typeof magnifier?.opacity === 'number' && Number.isFinite(magnifier.opacity)
+        ? Math.max(0.3, Math.min(1, magnifier.opacity))
+        : PERSISTED_DEFAULTS.edutictacMagnifier.opacity,
+  };
   state.orientation = p.orientation;
   state.theme = p.theme;
   state.profile = p.profile;
@@ -329,6 +363,20 @@ export function patch(update: HubStateUpdate) {
       changed.add('edutictacSpotlight');
       const { locked: _locked, ...persistedSpotlight } = next;
       save('edutictacSpotlight', persistedSpotlight);
+    }
+  }
+  if (update.edutictacMagnifier) {
+    const next = { ...state.edutictacMagnifier, ...update.edutictacMagnifier };
+    next.enabled = typeof next.enabled === 'boolean' ? next.enabled : state.edutictacMagnifier.enabled;
+    if (next.zoom !== 1.5 && next.zoom !== 2 && next.zoom !== 3 && next.zoom !== 4) next.zoom = state.edutictacMagnifier.zoom;
+    next.size = Number.isFinite(next.size) ? Math.max(160, Math.min(420, next.size)) : state.edutictacMagnifier.size;
+    next.borderWidth = Number.isFinite(next.borderWidth) ? Math.max(0, Math.min(12, next.borderWidth)) : state.edutictacMagnifier.borderWidth;
+    next.opacity = Number.isFinite(next.opacity) ? Math.max(0.3, Math.min(1, next.opacity)) : state.edutictacMagnifier.opacity;
+    if (typeof next.borderColor !== 'string' || !/^#[\da-f]{6}$/i.test(next.borderColor)) next.borderColor = state.edutictacMagnifier.borderColor;
+    if (JSON.stringify(next) !== JSON.stringify(state.edutictacMagnifier)) {
+      state.edutictacMagnifier = next;
+      changed.add('edutictacMagnifier');
+      save('edutictacMagnifier', next);
     }
   }
 

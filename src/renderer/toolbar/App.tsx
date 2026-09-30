@@ -115,6 +115,14 @@ interface HubSnapshot {
     dimOpacity: number;
     locked: boolean;
   };
+  edutictacMagnifier: {
+    enabled: boolean;
+    zoom: 1.5 | 2 | 3 | 4;
+    size: number;
+    borderColor: string;
+    borderWidth: number;
+    opacity: number;
+  };
   activeTool: ToolId;
   drawMode: boolean;
   settings: ToolSettings;
@@ -202,12 +210,14 @@ function shortenPath(p: string, max = 56): string {
 
 export function ToolbarApp() {
   const [cursorSupported, setCursorSupported] = createSignal(true);
+  const [magnifierSupported, setMagnifierSupported] = createSignal(false);
   const [clickPermissionPending, setClickPermissionPending] = createSignal(false);
   const [clickPermissionGranted, setClickPermissionGranted] = createSignal(false);
   const [hub, setHub] = createSignal<HubSnapshot>({
     edutictacCursor: { enabled: false, color: '#ff3b30', size: 44, opacity: 0.85, shape: 'ring' },
     edutictacClicks: { enabled: false, color: '#ff3b30', size: 68, duration: 520, opacity: 0.8, showButton: false },
     edutictacSpotlight: { enabled: false, shape: 'circle', width: 280, height: 280, feather: 28, dimOpacity: 0.62, locked: false },
+    edutictacMagnifier: { enabled: false, zoom: 2, size: 260, borderColor: '#ffffff', borderWidth: 4, opacity: 1 },
     activeTool: 'pencil',
     drawMode: false,
     settings: { color: '#3a3a3c', width: 3, opacity: 1 },
@@ -424,6 +434,7 @@ export function ToolbarApp() {
 
   onMount(() => {
     void window.pen.cursor.supported().then(setCursorSupported);
+    void window.pen.magnifier.supported().then(setMagnifierSupported);
     void window.pen.clicks.hasPermission().then(setClickPermissionGranted);
     void window.pen.hub.get().then((state) => {
       const s = state as HubSnapshot;
@@ -1475,6 +1486,65 @@ export function ToolbarApp() {
                 </button>
               </div>
               <div class="settings-hint">Lock or unlock with Command/Ctrl+Shift+L.</div>
+            </div>
+
+            <div class="settings-section">
+              <div class="settings-section-label">EduTicTac / Magnifier</div>
+              <div class="settings-row">
+                <span class="settings-row-label">Magnifier</span>
+                <button
+                  class={`settings-toggle ${hub().edutictacMagnifier.enabled ? 'on' : ''}`}
+                  disabled={!magnifierSupported() || !cursorSupported()}
+                  title={magnifierSupported() ? 'Magnify a small region around the pointer' : 'The regional capture provider is available on macOS builds'}
+                  onClick={() => void window.pen.hub.update({
+                    edutictacMagnifier: { enabled: !hub().edutictacMagnifier.enabled },
+                  })}
+                >
+                  <span>{magnifierSupported() && cursorSupported()
+                    ? (hub().edutictacMagnifier.enabled ? 'On' : 'Off')
+                    : 'Unavailable'}</span>
+                </button>
+              </div>
+              <div class="settings-hint">
+                Captures only a small local region with ScreenCaptureKit. Frames stay in memory.
+              </div>
+              <div class="settings-row">
+                <span class="settings-row-label">Zoom</span>
+                <select class="settings-toggle" value={hub().edutictacMagnifier.zoom}
+                  disabled={!hub().edutictacMagnifier.enabled}
+                  onChange={(e) => void window.pen.hub.update({
+                    edutictacMagnifier: { zoom: Number(e.currentTarget.value) as 1.5 | 2 | 3 | 4 },
+                  })}>
+                  <option value="1.5">1.5×</option>
+                  <option value="2">2×</option>
+                  <option value="3">3×</option>
+                  <option value="4">4×</option>
+                </select>
+              </div>
+              <div class="settings-row settings-row-stack">
+                <span class="settings-row-label">Diameter · {hub().edutictacMagnifier.size}px</span>
+                <input type="range" min="160" max="420" step="10" value={hub().edutictacMagnifier.size}
+                  disabled={!hub().edutictacMagnifier.enabled}
+                  onInput={(e) => void window.pen.hub.update({ edutictacMagnifier: { size: Number(e.currentTarget.value) } })} />
+              </div>
+              <div class="settings-row">
+                <span class="settings-row-label">Border</span>
+                <input type="color" value={hub().edutictacMagnifier.borderColor}
+                  disabled={!hub().edutictacMagnifier.enabled}
+                  onInput={(e) => void window.pen.hub.update({ edutictacMagnifier: { borderColor: e.currentTarget.value } })} />
+              </div>
+              <div class="settings-row settings-row-stack">
+                <span class="settings-row-label">Border width · {hub().edutictacMagnifier.borderWidth}px</span>
+                <input type="range" min="0" max="12" step="1" value={hub().edutictacMagnifier.borderWidth}
+                  disabled={!hub().edutictacMagnifier.enabled}
+                  onInput={(e) => void window.pen.hub.update({ edutictacMagnifier: { borderWidth: Number(e.currentTarget.value) } })} />
+              </div>
+              <div class="settings-row settings-row-stack">
+                <span class="settings-row-label">Opacity · {Math.round(hub().edutictacMagnifier.opacity * 100)}%</span>
+                <input type="range" min="30" max="100" step="5" value={hub().edutictacMagnifier.opacity * 100}
+                  disabled={!hub().edutictacMagnifier.enabled}
+                  onInput={(e) => void window.pen.hub.update({ edutictacMagnifier: { opacity: Number(e.currentTarget.value) / 100 } })} />
+              </div>
             </div>
 
             <div class="settings-section">
