@@ -35,6 +35,9 @@ if (isDev) {
 }
 
 app.whenReady().then(async () => {
+  // Explicitly restore the Dock icon in case a previous app version hid it.
+  if (process.platform === 'darwin') app.dock?.show();
+
   console.log('[pen] app ready, displays:', screen.getAllDisplays().length);
 
   await initPersistence();
