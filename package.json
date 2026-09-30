@@ -20,7 +20,7 @@
   "scripts": {
     "predev": "npm run build:click-observer",
     "dev": "vite",
-    "build:click-observer": "node-gyp rebuild --directory native/macos-click-observer --target=32.1.2 --dist-url=https://electronjs.org/headers",
+    "build:click-observer": "bash scripts/build-click-observer.sh",
     "prebuild": "npm run build:click-observer && tsc --noEmit && vite build",
     "build": "npm run prebuild && electron-builder",
     "build:unpacked": "npm run prebuild && electron-builder --dir",

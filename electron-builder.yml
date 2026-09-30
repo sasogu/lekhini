@@ -3,6 +3,10 @@ productName: Lekhini
 copyright: Copyright © 2026 Open Source Bharat — https://opensourcebharat.org
 asar: true
 asarUnpack: "**/*.node"
+# The EduTicTac addon is compiled for Electron by prebuild (universal on
+# macOS). Skipping electron-builder's older nested node-gyp avoids a Python
+# distutils failure on current macOS/Homebrew Python installations.
+npmRebuild: false
 
 # Auto-update feed + release target. electron-builder bakes this into
 # app-update.yml inside the build and, when run with --publish, uploads
