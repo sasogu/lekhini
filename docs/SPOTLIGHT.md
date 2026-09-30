@@ -35,3 +35,14 @@ Se guarda `edutictacSpotlight` con activación, forma, dimensiones, suavizado y
 oscurecimiento. `locked` vive solamente en el hub durante la sesión. Los
 valores se validan y limitan al hidratar y al recibir cambios desde el
 renderer.
+
+## Archivos y validación
+
+La capa propia vive en `src/edutictac/spotlight/Spotlight.tsx`. Comparte
+`src/edutictac/cursor/tracker.ts` con Cursor Highlight. Estado y validación se
+integran en hub/persistencia; el atajo está en `src/main/hotkeys.ts`; la UI se
+añade al panel de configuración existente.
+
+La fase se validó con `npm run prebuild` en Debian y con un paquete arm64
+firmado mediante Developer ID Application en macOS. Falta la validación visual
+manual del usuario en Retina y multimonitor.

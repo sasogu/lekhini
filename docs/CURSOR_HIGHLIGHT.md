@@ -20,7 +20,7 @@ Crear los módulos EduTicTac bajo `src/edutictac/`: `shared/` para settings y va
 
 El proceso principal consulta la posición únicamente mientras la función está activa, selecciona el display actual, convierte a coordenadas locales DIP y notifica ese overlay. El renderer actualiza una única capa visual pasiva con `pointer-events: none`; el pintado se agrupa en `requestAnimationFrame`. Al desactivar, elimina el temporizador, oculta la capa y libera listeners. El overlay sigue en click-through y no consume los clics.
 
-El ajuste se conserva dentro de una propiedad `edutictac` de `PersistedState`; empezar con habilitado (off), forma, color, diámetro y opacidad con validación de rangos. El preload expone solamente suscripciones/acciones tipadas. No se capturan pantallas ni se observan teclas. El permiso de Accesibilidad de macOS no debe solicitarse para consultar el cursor con Electron; no añadir un event tap/CoreGraphics en este MVP.
+El ajuste se conserva como `edutictacCursor` en `PersistedState`, con activación, forma, color, diámetro y opacidad validados. El preload expone solamente consulta de disponibilidad y suscripción a posiciones. No se capturan pantallas ni se observan teclas. El permiso de Accesibilidad de macOS no se solicita para consultar el cursor con Electron.
 
 ## Implementación actual
 
@@ -28,9 +28,9 @@ La primera versión está en `src/edutictac/`. El proceso principal consulta cad
 
 La disponibilidad Wayland se determina conservadoramente a partir de la selección explícita Ozone de Electron 32; en una sesión Wayland con hint `auto`, también se marca como no disponible. No se ha verificado en un equipo Wayland real y debe contrastarse en GNOME/KDE/wlroots antes de distribuir. La CI del proyecto no tiene suite de tests; la implementación se validó con typecheck y compilación Vite, no con interacción real multi-monitor.
 
-### Cambios de integración previstos
+### Cambios de integración realizados
 
-Nuevos archivos: `src/edutictac/shared/cursor.ts`, `src/edutictac/platform/cursor-position.ts`, `src/edutictac/cursor/CursorHighlight.tsx` y pruebas de settings/coordenadas. Integraciones upstream necesarias: `src/main/main.ts` para iniciar/detener el proveedor, `src/main/hub.ts` y `src/main/persistence.ts` para settings, `src/main/preload.ts`/`src/shared/types.ts` para IPC, `src/renderer/overlay/App.tsx` para montar la capa y `src/renderer/toolbar/App.tsx` para ajustes. Mantener intacto `src/main/windows/overlay.ts` inicialmente: ya crea los overlays multi-monitor y cada ventana está suscrita al hub.
+Los archivos propios son `src/edutictac/platform/cursor-position.ts`, `src/edutictac/cursor/tracker.ts` y `src/edutictac/cursor/CursorHighlight.tsx`. Las integraciones upstream son `src/main/main.ts` para registrar el proveedor, hub y persistencia para settings, preload/tipos para IPC, montaje en el overlay y ajustes en la toolbar. `src/main/windows/overlay.ts` permanece intacto: ya crea los overlays multimonitor y cada ventana está suscrita al hub.
 
 No se debe usar `screen.getCursorScreenPoint()` bajo Wayland. Identificar la sesión efectiva requiere comprobar backend Electron (X11/XWayland frente a Wayland), no inferir solo desde `XDG_SESSION_TYPE`, porque una sesión Wayland puede ejecutar Electron sobre XWayland. Si Electron 32 no expone el backend efectivo de forma fiable en esta app, fail closed en sesiones Wayland y documentar el fallback; no prometer compatibilidad automática.
 

@@ -1,0 +1,72 @@
+# Desarrollo y firma en macOS
+
+## Paquete de pruebas
+
+El paquete local se genera en `release/mac-arm64/Lekhini.app`. El build normal
+ejecuta `prebuild`, compila el addon de clics como universal arm64+x64,
+empaqueta Electron y firma el resultado.
+
+```sh
+npm install
+npm run build:unpacked
+```
+
+## Firma
+
+`scripts/adhocSign.cjs` aplica una firma ad hoc como respaldo cuando no hay
+certificado. Esta firma cambia de requisito al cambiar el contenido del bundle;
+macOS puede invalidar entonces permisos TCC concedidos a una compilación
+anterior.
+
+Para builds estables debe usarse Developer ID Application. La identidad está
+en el llavero de la sesión gráfica del Mac y puede no ser visible desde SSH.
+Ejecutar el build desde una Terminal gráfica. `electron-builder` selecciona
+automáticamente una identidad válida; si se usa `CSC_NAME`, proporcionar el
+nombre sin el prefijo `Developer ID Application:`.
+
+La primera firma puede pedir que `codesign` acceda a la clave privada del
+Llavero. Elegir **Permitir siempre** evita repetir el diálogo. Nunca exportar,
+copiar ni registrar en el repositorio la clave privada, contraseñas, hashes de
+certificado o credenciales de notarización.
+
+Verificación recomendada:
+
+```sh
+codesign --verify --deep --strict --verbose=2 release/mac-arm64/Lekhini.app
+codesign -dv --verbose=2 release/mac-arm64/Lekhini.app
+codesign -d -r- release/mac-arm64/Lekhini.app
+```
+
+El requisito debe contener el identificador `org.opensourcebharat.lekhini`,
+la cadena Apple y el Team ID; no debe consistir en un `cdhash` ad hoc.
+
+## Permisos TCC
+
+Con Developer ID estable, las reconstrucciones firmadas con la misma identidad
+deben conservar permisos. Al cambiar desde firma ad hoc a Developer ID hay que
+concederlos una última vez. Si una build ad hoc anterior deja entradas
+incompatibles, cerrar Lekhini y restablecer únicamente sus servicios:
+
+```sh
+tccutil reset ScreenCapture org.opensourcebharat.lekhini
+tccutil reset ListenEvent org.opensourcebharat.lekhini
+```
+
+Después, abrir el paquete nuevo y autorizar Grabación de pantalla y
+Monitorización de entrada. No reconstruir entre la autorización y la prueba.
+
+## Dock y cierre
+
+Lekhini muestra su icono en el Dock en builds empaquetados. El evento
+`activate` muestra y enfoca la toolbar existente o la crea de nuevo si ya no
+existe. El botón de cierre de la toolbar sigue cerrando la aplicación mediante
+el IPC upstream `window:close`.
+
+## Notarización
+
+Una firma Developer ID válida no implica que el paquete esté notarizado. El
+build local puede indicar que omitió notarización si no están configuradas las
+credenciales de Apple. La notarización debe resolverse antes de distribuir un
+DMG a terceros; no es necesaria para validar localmente Spotlight, Cursor o
+Click Effects.
+
