@@ -60,6 +60,8 @@ src/edutictac/
 
 Los módulos que se añadan después (`clicks/`, `keystrokes/`, `spotlight/`, `magnifier/`, `teacher-mode/`, `presets/`) deben seguir ese namespace. Las funciones visuales simples se pintarán en una capa overlay dedicada y pasiva, reutilizando cada ventana actual; no se crearán overlays duplicados por pantalla. La obtención de eventos globales, cuando la plataforma lo permita, irá detrás de un adaptador explícito y no dependerá de los eventos de dibujo: el overlay permanece click-through y, por tanto, no recibe de forma fiable el movimiento del puntero subyacente.
 
+La fuente global de clics para la fase Click Effects requiere proveedores nativos específicos por plataforma; el diseño y los límites están en [CLICK_EFFECTS.md](./CLICK_EFFECTS.md).
+
 El estado persistente nuevo debe añadirse bajo una propiedad `edutictac` en `PersistedState`, con defaults y normalización propios. Las operaciones efímeras viajan por una interfaz EduTicTac estrecha del preload y el hub. Los perfiles existentes deben mantenerse como selección de herramientas/IA; Teacher Mode debe componerse como estado opcional, no redefinir `ProfileId` con semánticas incompatibles.
 
 ## Cursor Highlight: integración mínima propuesta
