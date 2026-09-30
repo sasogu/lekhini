@@ -2,6 +2,7 @@ appId: org.opensourcebharat.lekhini
 productName: Lekhini
 copyright: Copyright © 2026 Open Source Bharat — https://opensourcebharat.org
 asar: true
+asarUnpack: "**/*.node"
 
 # Auto-update feed + release target. electron-builder bakes this into
 # app-update.yml inside the build and, when run with --publish, uploads
@@ -70,6 +71,7 @@ mac:
   extendInfo:
     NSScreenCaptureUsageDescription: Lekhini captures the screen only when you save an annotated screenshot.
     NSAccessibilityUsageDescription: Lekhini uses Accessibility to register global hotkeys (e.g., toggle draw mode) while other apps are focused.
+    NSInputMonitoringUsageDescription: EduTicTac displays a visual ripple when you press a mouse button. It does not monitor or store keyboard input.
 
 dmg:
   sign: false

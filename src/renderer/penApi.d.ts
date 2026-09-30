@@ -17,7 +17,7 @@ import type {
 declare global {
   interface Window {
     pen: {
-      cursor: {
+    cursor: {
         supported(): Promise<boolean>;
         onPosition(cb: (point: { x: number; y: number } | null) => void): () => void;
       };
@@ -156,6 +156,10 @@ declare global {
         install(): Promise<void>;
         openReleases(): Promise<void>;
         onStatus(cb: (s: UpdateStatus) => void): () => void;
+      };
+      clicks: {
+        requestAccess(): Promise<boolean>;
+        onClick(cb: (event: { button: 'left' | 'right' | 'middle'; x: number; y: number; id: string }) => void): () => void;
       };
       env: {
         displayId(): number;

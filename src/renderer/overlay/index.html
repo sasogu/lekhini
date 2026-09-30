@@ -45,6 +45,28 @@
         background: currentColor;
         box-shadow: 0 1px 5px rgba(0, 0, 0, 0.65);
       }
+      .edutictac-click {
+        position: absolute;
+        z-index: 39;
+        transform: translate(-50%, -50%);
+        border: 3px solid currentColor;
+        border-radius: 50%;
+        box-shadow: 0 1px 5px rgba(0, 0, 0, 0.55);
+        pointer-events: none;
+        animation-name: edutictac-click-ripple;
+        animation-timing-function: ease-out;
+        animation-fill-mode: both;
+      }
+      .edutictac-click-right { border-style: dashed; }
+      .edutictac-click-middle { border-width: 5px; }
+      .edutictac-click span {
+        position: absolute; inset: 0; display: grid; place-items: center;
+        color: currentColor; font: 700 12px system-ui, sans-serif;
+      }
+      @keyframes edutictac-click-ripple {
+        from { transform: translate(-50%, -50%) scale(0.25); opacity: 1; }
+        to { transform: translate(-50%, -50%) scale(1.1); opacity: 0; }
+      }
       .capture-surface {
         position: absolute;
         inset: 0;

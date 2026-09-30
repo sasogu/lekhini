@@ -1,5 +1,11 @@
 # Click Effects: viabilidad y diseño
 
+## Estado de implementación
+
+El primer incremento prioriza macOS. `src/edutictac/platform/macos-clicks.ts` conecta un módulo nativo pequeño con el hub y reutiliza los overlays existentes; `src/edutictac/clicks/ClickEffects.tsx` dibuja los ripples. La preferencia queda en `edutictacClicks`. El addon escucha únicamente mouse-down izquierdo, derecho y central mediante un event tap `listenOnly`, devuelve cada evento original sin alterarlo y no declara ni selecciona eventos de teclado.
+
+La compilación TypeScript y el build del renderer/main pasan en Linux, donde se compila el stub no compatible. El addon macOS y el permiso Input Monitoring todavía necesitan compilación y prueba real en el Mac antes de considerar esta fase lista. Windows, X11 y Wayland siguen pendientes/no disponibles.
+
 ## Qué falta
 
 Electron no ofrece un evento global de botón del ratón. La opción `forward` de `BrowserWindow.setIgnoreMouseEvents()` solo reenvía movimiento a Chromium; el clic atraviesa la ventana y llega a la aplicación inferior, como debe hacer el overlay actual. Por tanto, no se puede generar una animación global conectando `pointerdown` al canvas existente.
@@ -25,9 +31,9 @@ La activación debe ser explícita y bajo demanda. Iniciar el proveedor al activ
 
 ## Orden de implementación
 
-1. Tipos/defaults y una función pura que normalice los eventos de plataforma a `left | right | middle`, sin persistirlos.
-2. Renderizador de ripple aislado, montado sobre los overlays actuales; prueba de reproducción sintética local para validar estilo y temporización.
-3. Adaptador macOS listen-only de mouse-down, solicitado solo al activar; validar permisos y que los clics siguen llegando a la app inferior.
+1. Compilar el addon en macOS y validar el permiso Input Monitoring desde el primer uso; confirmar que cada clic sigue llegando a la aplicación inferior.
+2. Validar coordenadas en Retina y en una configuración con varios monitores; el punto Quartz debe coincidir con las coordenadas DIP de Electron.
+3. Añadir prueba unitaria de normalización y preferencias, y ajustar detalles visuales según la prueba en pantalla.
 4. Adaptador Windows `WH_MOUSE_LL` que siempre reenvíe el evento.
 5. Adaptador X11 X RECORD, condicionado a disponibilidad; Wayland queda expresamente no disponible.
 6. Panel de opciones, pruebas unitarias de normalización/settings y smoke test por sistema/monitor.

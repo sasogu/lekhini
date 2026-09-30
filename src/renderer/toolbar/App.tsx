@@ -105,6 +105,7 @@ type PanelKind = 'permission' | 'error';
 
 interface HubSnapshot {
   edutictacCursor: { enabled: boolean; color: string; size: number; opacity: number; shape: 'ring' | 'dot' };
+  edutictacClicks: { enabled: boolean; color: string; size: number; duration: number; opacity: number; showButton: boolean };
   activeTool: ToolId;
   drawMode: boolean;
   settings: ToolSettings;
@@ -192,8 +193,10 @@ function shortenPath(p: string, max = 56): string {
 
 export function ToolbarApp() {
   const [cursorSupported, setCursorSupported] = createSignal(true);
+  const [clickPermissionPending, setClickPermissionPending] = createSignal(false);
   const [hub, setHub] = createSignal<HubSnapshot>({
     edutictacCursor: { enabled: false, color: '#ff3b30', size: 44, opacity: 0.85, shape: 'ring' },
+    edutictacClicks: { enabled: false, color: '#ff3b30', size: 68, duration: 520, opacity: 0.8, showButton: false },
     activeTool: 'pencil',
     drawMode: false,
     settings: { color: '#3a3a3c', width: 3, opacity: 1 },
@@ -1332,6 +1335,51 @@ export function ToolbarApp() {
                 <input type="range" min="10" max="100" step="5" value={hub().edutictacCursor.opacity * 100}
                   disabled={!cursorSupported()}
                   onInput={(e) => void window.pen.hub.update({ edutictacCursor: { opacity: Number(e.currentTarget.value) / 100 } })} />
+              </div>
+            </div>
+
+            <div class="settings-section">
+              <div class="settings-section-label">EduTicTac / Click effects</div>
+              <div class="settings-row">
+                <span class="settings-row-label">Visual click ripple</span>
+                <button class={`settings-toggle ${hub().edutictacClicks.enabled ? 'on' : ''}`}
+                  disabled={clickPermissionPending()}
+                  title="Displays a ripple where mouse buttons are pressed. No click audio is played."
+                  onClick={async () => {
+                    if (hub().edutictacClicks.enabled) {
+                      await window.pen.hub.update({ edutictacClicks: { enabled: false } });
+                      return;
+                    }
+                    setClickPermissionPending(true);
+                    try { await window.pen.clicks.requestAccess(); }
+                    finally { setClickPermissionPending(false); }
+                  }}>
+                  <span>{hub().edutictacClicks.enabled ? 'On' : clickPermissionPending() ? 'Check macOS permission…' : 'Off'}</span>
+                </button>
+              </div>
+              <div class="settings-hint">macOS only in this first version. Allow Input Monitoring when macOS asks; if needed, enable Lekhini under System Settings → Privacy &amp; Security → Input Monitoring.</div>
+              <div class="settings-row settings-row-stack">
+                <span class="settings-row-label">Size · {hub().edutictacClicks.size}px</span>
+                <input type="range" min="24" max="160" step="4" value={hub().edutictacClicks.size}
+                  disabled={!hub().edutictacClicks.enabled}
+                  onInput={(e) => void window.pen.hub.update({ edutictacClicks: { size: Number(e.currentTarget.value) } })} />
+              </div>
+              <div class="settings-row">
+                <span class="settings-row-label">Color</span>
+                <input type="color" value={hub().edutictacClicks.color}
+                  onInput={(e) => void window.pen.hub.update({ edutictacClicks: { color: e.currentTarget.value } })} />
+              </div>
+              <div class="settings-row settings-row-stack">
+                <span class="settings-row-label">Duration · {hub().edutictacClicks.duration}ms</span>
+                <input type="range" min="150" max="1500" step="50" value={hub().edutictacClicks.duration}
+                  onInput={(e) => void window.pen.hub.update({ edutictacClicks: { duration: Number(e.currentTarget.value) } })} />
+              </div>
+              <div class="settings-row">
+                <span class="settings-row-label">Show L / R / M</span>
+                <button class={`settings-toggle ${hub().edutictacClicks.showButton ? 'on' : ''}`}
+                  onClick={() => void window.pen.hub.update({ edutictacClicks: { showButton: !hub().edutictacClicks.showButton } })}>
+                  <span>{hub().edutictacClicks.showButton ? 'On' : 'Off'}</span>
+                </button>
               </div>
             </div>
 

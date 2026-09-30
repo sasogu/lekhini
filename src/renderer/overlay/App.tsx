@@ -17,6 +17,7 @@ import {
 } from './canvas/recognize';
 import { buildTradeAnalysisText } from './canvas/ta';
 import { CursorHighlight } from '../../edutictac/cursor/CursorHighlight';
+import { ClickEffects } from '../../edutictac/clicks/ClickEffects';
 import type {
   Calibration,
   Item,
@@ -428,6 +429,7 @@ export function OverlayApp() {
   return (
     <div class="overlay-root">
       <CursorHighlight />
+      <ClickEffects />
       <Show when={whiteboard() !== 'off'}>
         <div
           class="board"

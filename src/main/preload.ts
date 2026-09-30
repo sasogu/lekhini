@@ -21,6 +21,11 @@ const api = {
     onPosition: (cb: (point: { x: number; y: number } | null) => void) =>
       bind('edutictac:cursor-position', cb as (v: unknown) => void),
   },
+  clicks: {
+    requestAccess: () => ipcRenderer.invoke('edutictac:clicks:request' satisfies IpcChannel) as Promise<boolean>,
+    onClick: (cb: (event: { button: 'left' | 'right' | 'middle'; x: number; y: number; id: string }) => void) =>
+      bind('edutictac:click', cb as (v: unknown) => void),
+  },
   hub: {
     get: () => ipcRenderer.invoke('hub:state:get' satisfies IpcChannel),
     update: (patch: HubStateUpdate) =>

@@ -21,6 +21,7 @@ import type {
 
 export interface HubState {
   edutictacCursor: { enabled: boolean; color: string; size: number; opacity: number; shape: 'ring' | 'dot' };
+  edutictacClicks: { enabled: boolean; color: string; size: number; duration: number; opacity: number; showButton: boolean };
   activeTool: ToolId;
   drawMode: boolean;
   settings: ToolSettings;
@@ -71,6 +72,7 @@ export interface HubState {
 
 const state: HubState = {
   edutictacCursor: { ...PERSISTED_DEFAULTS.edutictacCursor },
+  edutictacClicks: { ...PERSISTED_DEFAULTS.edutictacClicks },
   activeTool: 'pencil',
   drawMode: false,
   settings: { ...DEFAULT_SETTINGS },
@@ -163,6 +165,15 @@ export function hydrateFromPersistence(): void {
     opacity: typeof cursor?.opacity === 'number' && Number.isFinite(cursor.opacity) ? Math.max(0.1, Math.min(1, cursor.opacity)) : PERSISTED_DEFAULTS.edutictacCursor.opacity,
     shape: cursor?.shape === 'dot' ? 'dot' : 'ring',
   };
+  const clicks = p.edutictacClicks;
+  state.edutictacClicks = {
+    enabled: clicks?.enabled === true,
+    color: typeof clicks?.color === 'string' && /^#[\da-f]{6}$/i.test(clicks.color) ? clicks.color : PERSISTED_DEFAULTS.edutictacClicks.color,
+    size: typeof clicks?.size === 'number' && Number.isFinite(clicks.size) ? Math.max(24, Math.min(160, clicks.size)) : PERSISTED_DEFAULTS.edutictacClicks.size,
+    duration: typeof clicks?.duration === 'number' && Number.isFinite(clicks.duration) ? Math.max(150, Math.min(1500, clicks.duration)) : PERSISTED_DEFAULTS.edutictacClicks.duration,
+    opacity: typeof clicks?.opacity === 'number' && Number.isFinite(clicks.opacity) ? Math.max(0.1, Math.min(1, clicks.opacity)) : PERSISTED_DEFAULTS.edutictacClicks.opacity,
+    showButton: clicks?.showButton === true,
+  };
   state.orientation = p.orientation;
   state.theme = p.theme;
   state.profile = p.profile;
@@ -251,6 +262,20 @@ export function patch(update: HubStateUpdate) {
       state.edutictacCursor = next;
       changed.add('edutictacCursor');
       save('edutictacCursor', next);
+    }
+  }
+  if (update.edutictacClicks) {
+    const next = { ...state.edutictacClicks, ...update.edutictacClicks };
+    next.enabled = typeof next.enabled === 'boolean' ? next.enabled : state.edutictacClicks.enabled;
+    next.size = Number.isFinite(next.size) ? Math.max(24, Math.min(160, next.size)) : state.edutictacClicks.size;
+    next.duration = Number.isFinite(next.duration) ? Math.max(150, Math.min(1500, next.duration)) : state.edutictacClicks.duration;
+    next.opacity = Number.isFinite(next.opacity) ? Math.max(0.1, Math.min(1, next.opacity)) : state.edutictacClicks.opacity;
+    next.showButton = typeof next.showButton === 'boolean' ? next.showButton : state.edutictacClicks.showButton;
+    if (typeof next.color !== 'string' || !/^#[\da-f]{6}$/i.test(next.color)) next.color = state.edutictacClicks.color;
+    if (JSON.stringify(next) !== JSON.stringify(state.edutictacClicks)) {
+      state.edutictacClicks = next;
+      changed.add('edutictacClicks');
+      save('edutictacClicks', next);
     }
   }
 

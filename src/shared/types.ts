@@ -147,6 +147,7 @@ export type Orientation = 'h' | 'v';
 
 export type HubStateUpdate = {
   edutictacCursor?: Partial<{ enabled: boolean; color: string; size: number; opacity: number; shape: 'ring' | 'dot' }>;
+  edutictacClicks?: Partial<{ enabled: boolean; color: string; size: number; duration: number; opacity: number; showButton: boolean }>;
   activeTool?: ToolId;
   drawMode?: boolean;
   settings?: Partial<ToolSettings>;
@@ -337,6 +338,8 @@ export type IpcChannel =
   | 'hub:state:broadcast'
   | 'edutictac:cursor-position'
   | 'edutictac:cursor-supported'
+  | 'edutictac:clicks:request'
+  | 'edutictac:click'
   | 'overlay:undo'
   | 'overlay:redo'
   | 'overlay:clear'

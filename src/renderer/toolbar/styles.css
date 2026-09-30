@@ -681,6 +681,11 @@ html, body {
   color: var(--hint);
   font-weight: 600;
 }
+.settings-hint {
+  color: var(--hint);
+  font-size: 10px;
+  line-height: 1.45;
+}
 
 .profile-list {
   display: flex;

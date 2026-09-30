@@ -12,6 +12,7 @@ import type {
 
 export interface PersistedState {
   edutictacCursor: { enabled: boolean; color: string; size: number; opacity: number; shape: 'ring' | 'dot' };
+  edutictacClicks: { enabled: boolean; color: string; size: number; duration: number; opacity: number; showButton: boolean };
   orientation: Orientation;
   theme: Theme;
   profile: ProfileId;
@@ -63,6 +64,7 @@ export interface PersistedState {
 
 export const PERSISTED_DEFAULTS: PersistedState = {
   edutictacCursor: { enabled: false, color: '#ff3b30', size: 44, opacity: 0.85, shape: 'ring' },
+  edutictacClicks: { enabled: false, color: '#ff3b30', size: 68, duration: 520, opacity: 0.8, showButton: false },
   // First-run default is vertical, per design ask. Users can flip to
   // horizontal in Settings and that choice is then remembered.
   orientation: 'v',
