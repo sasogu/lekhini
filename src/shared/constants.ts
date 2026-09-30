@@ -94,6 +94,7 @@ export const HOTKEYS = {
   undo: 'CommandOrControl+Z',
   redo: 'CommandOrControl+Shift+Z',
   copySnip: 'CommandOrControl+C',
+  lockSpotlight: 'CommandOrControl+Shift+L',
 };
 
 export const TOOL_HOTKEYS: Record<string, ToolId> = {

@@ -18,6 +18,7 @@ import {
 import { buildTradeAnalysisText } from './canvas/ta';
 import { CursorHighlight } from '../../edutictac/cursor/CursorHighlight';
 import { ClickEffects } from '../../edutictac/clicks/ClickEffects';
+import { Spotlight } from '../../edutictac/spotlight/Spotlight';
 import type {
   Calibration,
   Item,
@@ -428,6 +429,7 @@ export function OverlayApp() {
 
   return (
     <div class="overlay-root">
+      <Spotlight />
       <CursorHighlight />
       <ClickEffects />
       <Show when={whiteboard() !== 'off'}>

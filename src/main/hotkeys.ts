@@ -17,6 +17,17 @@ export function registerHotkeys() {
     patch({ drawMode: !getState().drawMode });
   });
 
+  // Spotlight remains click-through, so locking it must also work while
+  // another application has focus. Registration failure means the OS or
+  // another app already owns the combination; never replace that binding.
+  if (!globalShortcut.isRegistered(HOTKEYS.lockSpotlight)) {
+    const registered = globalShortcut.register(HOTKEYS.lockSpotlight, () => {
+      const spotlight = getState().edutictacSpotlight;
+      if (spotlight.enabled) patch({ edutictacSpotlight: { locked: !spotlight.locked } });
+    });
+    if (!registered) console.warn('[EduTicTac] spotlight lock shortcut is unavailable');
+  }
+
   // Toolbar relay handlers — always callable from the toolbar buttons,
   // regardless of draw mode. The toolbar itself is a normal app window
   // that doesn't steal anything from the OS.

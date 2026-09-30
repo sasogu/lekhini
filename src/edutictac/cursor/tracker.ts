@@ -23,6 +23,11 @@ function stop(): void {
   hidePrevious();
 }
 
+function pause(): void {
+  if (timer) clearInterval(timer);
+  timer = null;
+}
+
 function tick(): void {
   const point = readCursorPosition();
   const display = screen.getDisplayNearestPoint(point);
@@ -39,7 +44,22 @@ function tick(): void {
 }
 
 function sync(): void {
-  if (!isCursorPositionSupported() || !getState().edutictacCursor.enabled) {
+  const state = getState();
+  const needsPosition =
+    state.edutictacCursor.enabled ||
+    (state.edutictacSpotlight.enabled && !state.edutictacSpotlight.locked);
+  // A locked spotlight deliberately keeps the last point visible. Stop
+  // polling without sending the normal null/clear event to that overlay.
+  if (
+    isCursorPositionSupported() &&
+    state.edutictacSpotlight.enabled &&
+    state.edutictacSpotlight.locked &&
+    !state.edutictacCursor.enabled
+  ) {
+    pause();
+    return;
+  }
+  if (!isCursorPositionSupported() || !needsPosition) {
     stop();
     return;
   }
@@ -51,7 +71,7 @@ function sync(): void {
 export function registerCursorTracker(): void {
   ipcMain.handle('edutictac:cursor-supported', () => isCursorPositionSupported());
   onChange((_state, changed) => {
-    if (changed.has('edutictacCursor')) sync();
+    if (changed.has('edutictacCursor') || changed.has('edutictacSpotlight')) sync();
   });
   app.on('will-quit', stop);
   sync();

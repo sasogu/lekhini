@@ -106,6 +106,15 @@ type PanelKind = 'permission' | 'error';
 interface HubSnapshot {
   edutictacCursor: { enabled: boolean; color: string; size: number; opacity: number; shape: 'ring' | 'dot' };
   edutictacClicks: { enabled: boolean; color: string; size: number; duration: number; opacity: number; showButton: boolean };
+  edutictacSpotlight: {
+    enabled: boolean;
+    shape: 'circle' | 'ellipse' | 'rectangle';
+    width: number;
+    height: number;
+    feather: number;
+    dimOpacity: number;
+    locked: boolean;
+  };
   activeTool: ToolId;
   drawMode: boolean;
   settings: ToolSettings;
@@ -198,6 +207,7 @@ export function ToolbarApp() {
   const [hub, setHub] = createSignal<HubSnapshot>({
     edutictacCursor: { enabled: false, color: '#ff3b30', size: 44, opacity: 0.85, shape: 'ring' },
     edutictacClicks: { enabled: false, color: '#ff3b30', size: 68, duration: 520, opacity: 0.8, showButton: false },
+    edutictacSpotlight: { enabled: false, shape: 'circle', width: 280, height: 280, feather: 28, dimOpacity: 0.62, locked: false },
     activeTool: 'pencil',
     drawMode: false,
     settings: { color: '#3a3a3c', width: 3, opacity: 1 },
@@ -1398,6 +1408,73 @@ export function ToolbarApp() {
                   <span>{hub().edutictacClicks.showButton ? 'On' : 'Off'}</span>
                 </button>
               </div>
+            </div>
+
+            <div class="settings-section">
+              <div class="settings-section-label">EduTicTac / Spotlight</div>
+              <div class="settings-row">
+                <span class="settings-row-label">Spotlight</span>
+                <button
+                  class={`settings-toggle ${hub().edutictacSpotlight.enabled ? 'on' : ''}`}
+                  disabled={!cursorSupported()}
+                  title={cursorSupported() ? 'Dim the screen outside the spotlight' : 'Global cursor position is unavailable on native Wayland'}
+                  onClick={() => void window.pen.hub.update({
+                    edutictacSpotlight: { enabled: !hub().edutictacSpotlight.enabled },
+                  })}
+                >
+                  <span>{cursorSupported() ? (hub().edutictacSpotlight.enabled ? 'On' : 'Off') : 'Unavailable'}</span>
+                </button>
+              </div>
+              <div class="settings-row">
+                <span class="settings-row-label">Shape</span>
+                <select class="settings-toggle" value={hub().edutictacSpotlight.shape}
+                  disabled={!hub().edutictacSpotlight.enabled}
+                  onChange={(e) => void window.pen.hub.update({
+                    edutictacSpotlight: { shape: e.currentTarget.value as 'circle' | 'ellipse' | 'rectangle' },
+                  })}>
+                  <option value="circle">Circle</option>
+                  <option value="ellipse">Ellipse</option>
+                  <option value="rectangle">Rectangle</option>
+                </select>
+              </div>
+              <div class="settings-row settings-row-stack">
+                <span class="settings-row-label">Width · {hub().edutictacSpotlight.width}px</span>
+                <input type="range" min="120" max="900" step="10" value={hub().edutictacSpotlight.width}
+                  disabled={!hub().edutictacSpotlight.enabled}
+                  onInput={(e) => void window.pen.hub.update({ edutictacSpotlight: { width: Number(e.currentTarget.value) } })} />
+              </div>
+              <Show when={hub().edutictacSpotlight.shape !== 'circle'}>
+                <div class="settings-row settings-row-stack">
+                  <span class="settings-row-label">Height · {hub().edutictacSpotlight.height}px</span>
+                  <input type="range" min="120" max="700" step="10" value={hub().edutictacSpotlight.height}
+                    disabled={!hub().edutictacSpotlight.enabled}
+                    onInput={(e) => void window.pen.hub.update({ edutictacSpotlight: { height: Number(e.currentTarget.value) } })} />
+                </div>
+              </Show>
+              <div class="settings-row settings-row-stack">
+                <span class="settings-row-label">Soft edge · {hub().edutictacSpotlight.feather}px</span>
+                <input type="range" min="0" max="100" step="4" value={hub().edutictacSpotlight.feather}
+                  disabled={!hub().edutictacSpotlight.enabled}
+                  onInput={(e) => void window.pen.hub.update({ edutictacSpotlight: { feather: Number(e.currentTarget.value) } })} />
+              </div>
+              <div class="settings-row settings-row-stack">
+                <span class="settings-row-label">Dimming · {Math.round(hub().edutictacSpotlight.dimOpacity * 100)}%</span>
+                <input type="range" min="15" max="90" step="5" value={hub().edutictacSpotlight.dimOpacity * 100}
+                  disabled={!hub().edutictacSpotlight.enabled}
+                  onInput={(e) => void window.pen.hub.update({ edutictacSpotlight: { dimOpacity: Number(e.currentTarget.value) / 100 } })} />
+              </div>
+              <div class="settings-row">
+                <span class="settings-row-label">Lock spotlight here</span>
+                <button class={`settings-toggle ${hub().edutictacSpotlight.locked ? 'on' : ''}`}
+                  disabled={!hub().edutictacSpotlight.enabled}
+                  title="Command/Ctrl+Shift+L"
+                  onClick={() => void window.pen.hub.update({
+                    edutictacSpotlight: { locked: !hub().edutictacSpotlight.locked },
+                  })}>
+                  <span>{hub().edutictacSpotlight.locked ? 'Locked' : 'Follow cursor'}</span>
+                </button>
+              </div>
+              <div class="settings-hint">Lock or unlock with Command/Ctrl+Shift+L.</div>
             </div>
 
             <div class="settings-section">

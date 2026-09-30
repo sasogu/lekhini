@@ -148,6 +148,15 @@ export type Orientation = 'h' | 'v';
 export type HubStateUpdate = {
   edutictacCursor?: Partial<{ enabled: boolean; color: string; size: number; opacity: number; shape: 'ring' | 'dot' }>;
   edutictacClicks?: Partial<{ enabled: boolean; color: string; size: number; duration: number; opacity: number; showButton: boolean }>;
+  edutictacSpotlight?: Partial<{
+    enabled: boolean;
+    shape: 'circle' | 'ellipse' | 'rectangle';
+    width: number;
+    height: number;
+    feather: number;
+    dimOpacity: number;
+    locked: boolean;
+  }>;
   activeTool?: ToolId;
   drawMode?: boolean;
   settings?: Partial<ToolSettings>;

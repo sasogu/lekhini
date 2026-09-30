@@ -22,6 +22,15 @@ import type {
 export interface HubState {
   edutictacCursor: { enabled: boolean; color: string; size: number; opacity: number; shape: 'ring' | 'dot' };
   edutictacClicks: { enabled: boolean; color: string; size: number; duration: number; opacity: number; showButton: boolean };
+  edutictacSpotlight: {
+    enabled: boolean;
+    shape: 'circle' | 'ellipse' | 'rectangle';
+    width: number;
+    height: number;
+    feather: number;
+    dimOpacity: number;
+    locked: boolean;
+  };
   activeTool: ToolId;
   drawMode: boolean;
   settings: ToolSettings;
@@ -73,6 +82,7 @@ export interface HubState {
 const state: HubState = {
   edutictacCursor: { ...PERSISTED_DEFAULTS.edutictacCursor },
   edutictacClicks: { ...PERSISTED_DEFAULTS.edutictacClicks },
+  edutictacSpotlight: { ...PERSISTED_DEFAULTS.edutictacSpotlight, locked: false },
   activeTool: 'pencil',
   drawMode: false,
   settings: { ...DEFAULT_SETTINGS },
@@ -173,6 +183,31 @@ export function hydrateFromPersistence(): void {
     duration: typeof clicks?.duration === 'number' && Number.isFinite(clicks.duration) ? Math.max(150, Math.min(1500, clicks.duration)) : PERSISTED_DEFAULTS.edutictacClicks.duration,
     opacity: typeof clicks?.opacity === 'number' && Number.isFinite(clicks.opacity) ? Math.max(0.1, Math.min(1, clicks.opacity)) : PERSISTED_DEFAULTS.edutictacClicks.opacity,
     showButton: clicks?.showButton === true,
+  };
+  const spotlight = p.edutictacSpotlight;
+  state.edutictacSpotlight = {
+    enabled: spotlight?.enabled === true,
+    shape:
+      spotlight?.shape === 'ellipse' || spotlight?.shape === 'rectangle'
+        ? spotlight.shape
+        : 'circle',
+    width:
+      typeof spotlight?.width === 'number' && Number.isFinite(spotlight.width)
+        ? Math.max(120, Math.min(900, spotlight.width))
+        : PERSISTED_DEFAULTS.edutictacSpotlight.width,
+    height:
+      typeof spotlight?.height === 'number' && Number.isFinite(spotlight.height)
+        ? Math.max(120, Math.min(700, spotlight.height))
+        : PERSISTED_DEFAULTS.edutictacSpotlight.height,
+    feather:
+      typeof spotlight?.feather === 'number' && Number.isFinite(spotlight.feather)
+        ? Math.max(0, Math.min(100, spotlight.feather))
+        : PERSISTED_DEFAULTS.edutictacSpotlight.feather,
+    dimOpacity:
+      typeof spotlight?.dimOpacity === 'number' && Number.isFinite(spotlight.dimOpacity)
+        ? Math.max(0.15, Math.min(0.9, spotlight.dimOpacity))
+        : PERSISTED_DEFAULTS.edutictacSpotlight.dimOpacity,
+    locked: false,
   };
   state.orientation = p.orientation;
   state.theme = p.theme;
@@ -276,6 +311,24 @@ export function patch(update: HubStateUpdate) {
       state.edutictacClicks = next;
       changed.add('edutictacClicks');
       save('edutictacClicks', next);
+    }
+  }
+  if (update.edutictacSpotlight) {
+    const next = { ...state.edutictacSpotlight, ...update.edutictacSpotlight };
+    next.enabled = typeof next.enabled === 'boolean' ? next.enabled : state.edutictacSpotlight.enabled;
+    next.width = Number.isFinite(next.width) ? Math.max(120, Math.min(900, next.width)) : state.edutictacSpotlight.width;
+    next.height = Number.isFinite(next.height) ? Math.max(120, Math.min(700, next.height)) : state.edutictacSpotlight.height;
+    next.feather = Number.isFinite(next.feather) ? Math.max(0, Math.min(100, next.feather)) : state.edutictacSpotlight.feather;
+    next.dimOpacity = Number.isFinite(next.dimOpacity) ? Math.max(0.15, Math.min(0.9, next.dimOpacity)) : state.edutictacSpotlight.dimOpacity;
+    next.locked = typeof next.locked === 'boolean' ? next.locked : state.edutictacSpotlight.locked;
+    if (next.shape !== 'ellipse' && next.shape !== 'rectangle') next.shape = 'circle';
+    if (!next.enabled) next.locked = false;
+    if (next.shape === 'circle') next.height = next.width;
+    if (JSON.stringify(next) !== JSON.stringify(state.edutictacSpotlight)) {
+      state.edutictacSpotlight = next;
+      changed.add('edutictacSpotlight');
+      const { locked: _locked, ...persistedSpotlight } = next;
+      save('edutictacSpotlight', persistedSpotlight);
     }
   }
 
