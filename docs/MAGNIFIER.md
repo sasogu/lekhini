@@ -89,9 +89,25 @@ Lekhini ya gestiona el panel del permiso; la lupa debe reutilizarlo.
 
 ## Fases de implementación
 
-1. Addon ScreenCaptureKit con start/update/stop y exclusión de ventanas propias.
+1. Proveedor ScreenCaptureKit con start/stop y exclusión de ventanas propias.
 2. Adaptador principal que enlaza cursor, display y ciclo de vida.
 3. Renderer de lente y ajustes persistentes.
 4. Pruebas de coordenadas, Retina, permisos y liberación de recursos.
 5. Proveedores Windows/X11 y documentación de Wayland.
 
+## Proveedor implementado
+
+`native/macos-magnifier/MagnifierCapture.swift` implementa el primer
+incremento. Recibe display, rectángulo, resolución de salida y FPS; crea un
+`SCStream` regional que excluye `org.opensourcebharat.lekhini`; y escribe
+frames BGRA mediante un protocolo binario con cabecera y longitud. Mantiene
+`queueDepth` en 2, no incluye cursor ni audio y libera el stream al recibir
+SIGTERM/SIGINT.
+
+`scripts/build-magnifier-provider.sh` genera un ejecutable universal arm64+x64
+en macOS. En otras plataformas crea un stub inactivo para conservar los builds
+existentes. El binario se empaqueta como recurso en `bin/magnifier-capture`.
+
+Todavía no se inicia desde la aplicación: el siguiente incremento añadirá el
+controlador Electron, framing defensivo del stdout y ciclo de tile al cambiar
+de monitor o acercarse a un borde.

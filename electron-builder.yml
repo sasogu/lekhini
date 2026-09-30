@@ -45,6 +45,8 @@ files:
 extraResources:
   - from: resources/intent
     to: intent
+  - from: native/macos-magnifier/build/magnifier-capture
+    to: bin/magnifier-capture
 
 mac:
   category: public.app-category.productivity
