@@ -56,6 +56,37 @@
         box-shadow: 0 5px 22px rgba(0, 0, 0, 0.55), 0 1px 5px rgba(0, 0, 0, 0.75);
         pointer-events: none;
       }
+      .edutictac-keystrokes {
+        position: absolute;
+        z-index: 44;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        padding: 28px;
+        pointer-events: none;
+      }
+      .edutictac-keystrokes-top-left { top: 0; left: 0; align-items: flex-start; }
+      .edutictac-keystrokes-top-center { top: 0; left: 50%; transform: translateX(-50%); align-items: center; }
+      .edutictac-keystrokes-top-right { top: 0; right: 0; align-items: flex-end; }
+      .edutictac-keystrokes-bottom-left { bottom: 0; left: 0; align-items: flex-start; }
+      .edutictac-keystrokes-bottom-center { bottom: 0; left: 50%; transform: translateX(-50%); align-items: center; }
+      .edutictac-keystrokes-bottom-right { bottom: 0; right: 0; align-items: flex-end; }
+      .edutictac-keystroke {
+        color: #fff;
+        border: 1px solid rgba(255, 255, 255, 0.24);
+        border-radius: 12px;
+        box-shadow: 0 4px 18px rgba(0, 0, 0, 0.38);
+        padding: 8px 14px;
+        font-family: system-ui, -apple-system, sans-serif;
+        font-weight: 650;
+        line-height: 1.1;
+        white-space: nowrap;
+        animation: edutictac-keystroke-in 120ms ease-out both;
+      }
+      @keyframes edutictac-keystroke-in {
+        from { transform: translateY(6px) scale(0.96); opacity: 0; }
+        to { transform: translateY(0) scale(1); }
+      }
       .edutictac-cursor-dot {
         border: 0;
         background: currentColor;

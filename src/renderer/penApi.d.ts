@@ -33,6 +33,12 @@ declare global {
           tileHeight: number;
         } | null) => void): () => void;
       };
+      keystrokes: {
+        hasPermission(): Promise<boolean>;
+        requestPermission(): Promise<boolean>;
+        openSettings(): Promise<void>;
+        onKey(cb: (event: { label: string; id: string }) => void): () => void;
+      };
       hub: {
         get(): Promise<unknown>;
         update(patch: HubStateUpdate): Promise<unknown>;

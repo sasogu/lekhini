@@ -6,6 +6,7 @@
 - [Click Effects](./CLICK_EFFECTS.md)
 - [Spotlight](./SPOTLIGHT.md)
 - [Lupa regional](./MAGNIFIER.md)
+- [Visualización segura de atajos](./KEYSTROKES.md)
 - [Desarrollo y firma en macOS](./MACOS_DEVELOPMENT.md)
 - [Privacidad de las extensiones](./PRIVACY_EDUTICTAC.md)
 - [Linux: X11 y Wayland](./LINUX_WAYLAND.md)

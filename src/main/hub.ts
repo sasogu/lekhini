@@ -39,6 +39,16 @@ export interface HubState {
     borderWidth: number;
     opacity: number;
   };
+  edutictacKeystrokes: {
+    enabled: boolean;
+    onlyShortcuts: boolean;
+    position: 'top-left' | 'top-center' | 'top-right' | 'bottom-left' | 'bottom-center' | 'bottom-right';
+    fontSize: number;
+    background: string;
+    opacity: number;
+    duration: number;
+    maxVisible: number;
+  };
   activeTool: ToolId;
   drawMode: boolean;
   settings: ToolSettings;
@@ -92,6 +102,7 @@ const state: HubState = {
   edutictacClicks: { ...PERSISTED_DEFAULTS.edutictacClicks },
   edutictacSpotlight: { ...PERSISTED_DEFAULTS.edutictacSpotlight, locked: false },
   edutictacMagnifier: { ...PERSISTED_DEFAULTS.edutictacMagnifier },
+  edutictacKeystrokes: { ...PERSISTED_DEFAULTS.edutictacKeystrokes },
   activeTool: 'pencil',
   drawMode: false,
   settings: { ...DEFAULT_SETTINGS },
@@ -243,6 +254,25 @@ export function hydrateFromPersistence(): void {
         ? Math.max(0.3, Math.min(1, magnifier.opacity))
         : PERSISTED_DEFAULTS.edutictacMagnifier.opacity,
   };
+  const keystrokes = p.edutictacKeystrokes;
+  const validPositions = new Set(['top-left', 'top-center', 'top-right', 'bottom-left', 'bottom-center', 'bottom-right']);
+  state.edutictacKeystrokes = {
+    enabled: keystrokes?.enabled === true,
+    onlyShortcuts: keystrokes?.onlyShortcuts !== false,
+    position: validPositions.has(keystrokes?.position ?? '')
+      ? keystrokes!.position
+      : PERSISTED_DEFAULTS.edutictacKeystrokes.position,
+    fontSize: typeof keystrokes?.fontSize === 'number' && Number.isFinite(keystrokes.fontSize)
+      ? Math.max(16, Math.min(56, keystrokes.fontSize)) : PERSISTED_DEFAULTS.edutictacKeystrokes.fontSize,
+    background: typeof keystrokes?.background === 'string' && /^#[\da-f]{6}$/i.test(keystrokes.background)
+      ? keystrokes.background : PERSISTED_DEFAULTS.edutictacKeystrokes.background,
+    opacity: typeof keystrokes?.opacity === 'number' && Number.isFinite(keystrokes.opacity)
+      ? Math.max(0.3, Math.min(1, keystrokes.opacity)) : PERSISTED_DEFAULTS.edutictacKeystrokes.opacity,
+    duration: typeof keystrokes?.duration === 'number' && Number.isFinite(keystrokes.duration)
+      ? Math.max(500, Math.min(5000, keystrokes.duration)) : PERSISTED_DEFAULTS.edutictacKeystrokes.duration,
+    maxVisible: typeof keystrokes?.maxVisible === 'number' && Number.isFinite(keystrokes.maxVisible)
+      ? Math.max(1, Math.min(6, Math.round(keystrokes.maxVisible))) : PERSISTED_DEFAULTS.edutictacKeystrokes.maxVisible,
+  };
   state.orientation = p.orientation;
   state.theme = p.theme;
   state.profile = p.profile;
@@ -377,6 +407,23 @@ export function patch(update: HubStateUpdate) {
       state.edutictacMagnifier = next;
       changed.add('edutictacMagnifier');
       save('edutictacMagnifier', next);
+    }
+  }
+  if (update.edutictacKeystrokes) {
+    const next = { ...state.edutictacKeystrokes, ...update.edutictacKeystrokes };
+    const positions = new Set(['top-left', 'top-center', 'top-right', 'bottom-left', 'bottom-center', 'bottom-right']);
+    next.enabled = typeof next.enabled === 'boolean' ? next.enabled : state.edutictacKeystrokes.enabled;
+    next.onlyShortcuts = typeof next.onlyShortcuts === 'boolean' ? next.onlyShortcuts : state.edutictacKeystrokes.onlyShortcuts;
+    if (!positions.has(next.position)) next.position = state.edutictacKeystrokes.position;
+    next.fontSize = Number.isFinite(next.fontSize) ? Math.max(16, Math.min(56, next.fontSize)) : state.edutictacKeystrokes.fontSize;
+    next.opacity = Number.isFinite(next.opacity) ? Math.max(0.3, Math.min(1, next.opacity)) : state.edutictacKeystrokes.opacity;
+    next.duration = Number.isFinite(next.duration) ? Math.max(500, Math.min(5000, next.duration)) : state.edutictacKeystrokes.duration;
+    next.maxVisible = Number.isFinite(next.maxVisible) ? Math.max(1, Math.min(6, Math.round(next.maxVisible))) : state.edutictacKeystrokes.maxVisible;
+    if (typeof next.background !== 'string' || !/^#[\da-f]{6}$/i.test(next.background)) next.background = state.edutictacKeystrokes.background;
+    if (JSON.stringify(next) !== JSON.stringify(state.edutictacKeystrokes)) {
+      state.edutictacKeystrokes = next;
+      changed.add('edutictacKeystrokes');
+      save('edutictacKeystrokes', next);
     }
   }
 

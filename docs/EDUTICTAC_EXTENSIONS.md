@@ -15,7 +15,7 @@ su hub, persistencia y overlays multimonitor.
 | Dock de macOS | Implementado | macOS | [MACOS_DEVELOPMENT.md](./MACOS_DEVELOPMENT.md) |
 | Firma estable de desarrollo | Configurada en el Mac de pruebas | macOS | [MACOS_DEVELOPMENT.md](./MACOS_DEVELOPMENT.md) |
 | Magnifier | Implementada y probada | ScreenCaptureKit en macOS; otros proveedores pendientes | [MAGNIFIER.md](./MAGNIFIER.md) |
-| Keystrokes | No implementada | Pendiente; debe evitar captura de texto | — |
+| Keystrokes | Implementada; pendiente de validación en el Mac | macOS; modo «solo atajos» recomendado | [KEYSTROKES.md](./KEYSTROKES.md) |
 | Teacher Mode | No implementada | Pendiente | — |
 | Presets EduTicTac | No implementados | Pendiente | — |
 | Shortcuts configurables | No implementados | Solo existe el bloqueo fijo de Spotlight | — |

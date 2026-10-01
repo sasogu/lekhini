@@ -20,6 +20,7 @@ import { CursorHighlight } from '../../edutictac/cursor/CursorHighlight';
 import { ClickEffects } from '../../edutictac/clicks/ClickEffects';
 import { Spotlight } from '../../edutictac/spotlight/Spotlight';
 import { Magnifier } from '../../edutictac/magnifier/Magnifier';
+import { Keystrokes } from '../../edutictac/keystrokes/Keystrokes';
 import type {
   Calibration,
   Item,
@@ -434,6 +435,7 @@ export function OverlayApp() {
       <CursorHighlight />
       <ClickEffects />
       <Magnifier />
+      <Keystrokes />
       <Show when={whiteboard() !== 'off'}>
         <div
           class="board"

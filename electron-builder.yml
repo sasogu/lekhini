@@ -77,7 +77,7 @@ mac:
   extendInfo:
     NSScreenCaptureUsageDescription: Lekhini captures the screen only when you save an annotated screenshot.
     NSAccessibilityUsageDescription: Lekhini uses Accessibility to register global hotkeys (e.g., toggle draw mode) while other apps are focused.
-    NSInputMonitoringUsageDescription: EduTicTac displays a visual ripple when you press a mouse button. It does not monitor or store keyboard input.
+    NSInputMonitoringUsageDescription: EduTicTac can display mouse clicks and keyboard shortcuts during a presentation. It never stores keystrokes or typed text.
 
 dmg:
   sign: false

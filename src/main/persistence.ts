@@ -29,6 +29,16 @@ export interface PersistedState {
     borderWidth: number;
     opacity: number;
   };
+  edutictacKeystrokes: {
+    enabled: boolean;
+    onlyShortcuts: boolean;
+    position: 'top-left' | 'top-center' | 'top-right' | 'bottom-left' | 'bottom-center' | 'bottom-right';
+    fontSize: number;
+    background: string;
+    opacity: number;
+    duration: number;
+    maxVisible: number;
+  };
   orientation: Orientation;
   theme: Theme;
   profile: ProfileId;
@@ -96,6 +106,16 @@ export const PERSISTED_DEFAULTS: PersistedState = {
     borderColor: '#ffffff',
     borderWidth: 4,
     opacity: 1,
+  },
+  edutictacKeystrokes: {
+    enabled: false,
+    onlyShortcuts: true,
+    position: 'bottom-center',
+    fontSize: 28,
+    background: '#111111',
+    opacity: 0.88,
+    duration: 1600,
+    maxVisible: 3,
   },
   // First-run default is vertical, per design ask. Users can flip to
   // horizontal in Settings and that choice is then remembered.

@@ -123,6 +123,16 @@ interface HubSnapshot {
     borderWidth: number;
     opacity: number;
   };
+  edutictacKeystrokes: {
+    enabled: boolean;
+    onlyShortcuts: boolean;
+    position: 'top-left' | 'top-center' | 'top-right' | 'bottom-left' | 'bottom-center' | 'bottom-right';
+    fontSize: number;
+    background: string;
+    opacity: number;
+    duration: number;
+    maxVisible: number;
+  };
   activeTool: ToolId;
   drawMode: boolean;
   settings: ToolSettings;
@@ -213,11 +223,14 @@ export function ToolbarApp() {
   const [magnifierSupported, setMagnifierSupported] = createSignal(false);
   const [clickPermissionPending, setClickPermissionPending] = createSignal(false);
   const [clickPermissionGranted, setClickPermissionGranted] = createSignal(false);
+  const [keyPermissionPending, setKeyPermissionPending] = createSignal(false);
+  const [keyPermissionGranted, setKeyPermissionGranted] = createSignal(false);
   const [hub, setHub] = createSignal<HubSnapshot>({
     edutictacCursor: { enabled: false, color: '#ff3b30', size: 44, opacity: 0.85, shape: 'ring' },
     edutictacClicks: { enabled: false, color: '#ff3b30', size: 68, duration: 520, opacity: 0.8, showButton: false },
     edutictacSpotlight: { enabled: false, shape: 'circle', width: 280, height: 280, feather: 28, dimOpacity: 0.62, locked: false },
     edutictacMagnifier: { enabled: false, zoom: 2, size: 260, borderColor: '#ffffff', borderWidth: 4, opacity: 1 },
+    edutictacKeystrokes: { enabled: false, onlyShortcuts: true, position: 'bottom-center', fontSize: 28, background: '#111111', opacity: 0.88, duration: 1600, maxVisible: 3 },
     activeTool: 'pencil',
     drawMode: false,
     settings: { color: '#3a3a3c', width: 3, opacity: 1 },
@@ -436,6 +449,7 @@ export function ToolbarApp() {
     void window.pen.cursor.supported().then(setCursorSupported);
     void window.pen.magnifier.supported().then(setMagnifierSupported);
     void window.pen.clicks.hasPermission().then(setClickPermissionGranted);
+    void window.pen.keystrokes.hasPermission().then(setKeyPermissionGranted);
     void window.pen.hub.get().then((state) => {
       const s = state as HubSnapshot;
       setHub(s);
@@ -1418,6 +1432,87 @@ export function ToolbarApp() {
                   onClick={() => void window.pen.hub.update({ edutictacClicks: { showButton: !hub().edutictacClicks.showButton } })}>
                   <span>{hub().edutictacClicks.showButton ? 'On' : 'Off'}</span>
                 </button>
+              </div>
+            </div>
+
+            <div class="settings-section">
+              <div class="settings-section-label">EduTicTac / Keystrokes</div>
+              <div class="settings-row">
+                <span class="settings-row-label">Show keyboard shortcuts</span>
+                <button class={`settings-toggle ${hub().edutictacKeystrokes.enabled ? 'on' : ''}`}
+                  disabled={keyPermissionPending()}
+                  onClick={async () => {
+                    if (hub().edutictacKeystrokes.enabled) {
+                      await window.pen.hub.update({ edutictacKeystrokes: { enabled: false } });
+                      return;
+                    }
+                    setKeyPermissionPending(true);
+                    try {
+                      const granted = await window.pen.keystrokes.requestPermission();
+                      setKeyPermissionGranted(granted);
+                    } finally { setKeyPermissionPending(false); }
+                  }}>
+                  <span>{hub().edutictacKeystrokes.enabled ? 'On' : keyPermissionPending() ? 'Check macOS permission…' : 'Off'}</span>
+                </button>
+              </div>
+              <div class="settings-hint">
+                Shows temporary key combinations locally. It never reads characters, stores text or keeps a history.
+              </div>
+              <Show when={!keyPermissionGranted()}>
+                <div class="settings-row">
+                  <span class="settings-row-label">Permission</span>
+                  <button class="settings-toggle" onClick={() => void window.pen.keystrokes.openSettings()}>
+                    <span>Open Input Monitoring</span>
+                  </button>
+                </div>
+              </Show>
+              <div class="settings-row">
+                <span class="settings-row-label">Only shortcuts</span>
+                <button class={`settings-toggle ${hub().edutictacKeystrokes.onlyShortcuts ? 'on' : ''}`}
+                  onClick={() => void window.pen.hub.update({
+                    edutictacKeystrokes: { onlyShortcuts: !hub().edutictacKeystrokes.onlyShortcuts },
+                  })}>
+                  <span>{hub().edutictacKeystrokes.onlyShortcuts ? 'Recommended' : 'All supported keys'}</span>
+                </button>
+              </div>
+              <div class="settings-row">
+                <span class="settings-row-label">Position</span>
+                <select class="settings-toggle" value={hub().edutictacKeystrokes.position}
+                  onChange={(e) => void window.pen.hub.update({ edutictacKeystrokes: {
+                    position: e.currentTarget.value as HubSnapshot['edutictacKeystrokes']['position'],
+                  } })}>
+                  <option value="top-left">Top left</option>
+                  <option value="top-center">Top center</option>
+                  <option value="top-right">Top right</option>
+                  <option value="bottom-left">Bottom left</option>
+                  <option value="bottom-center">Bottom center</option>
+                  <option value="bottom-right">Bottom right</option>
+                </select>
+              </div>
+              <div class="settings-row settings-row-stack">
+                <span class="settings-row-label">Text size · {hub().edutictacKeystrokes.fontSize}px</span>
+                <input type="range" min="16" max="56" step="2" value={hub().edutictacKeystrokes.fontSize}
+                  onInput={(e) => void window.pen.hub.update({ edutictacKeystrokes: { fontSize: Number(e.currentTarget.value) } })} />
+              </div>
+              <div class="settings-row">
+                <span class="settings-row-label">Background</span>
+                <input type="color" value={hub().edutictacKeystrokes.background}
+                  onInput={(e) => void window.pen.hub.update({ edutictacKeystrokes: { background: e.currentTarget.value } })} />
+              </div>
+              <div class="settings-row settings-row-stack">
+                <span class="settings-row-label">Duration · {hub().edutictacKeystrokes.duration}ms</span>
+                <input type="range" min="500" max="5000" step="100" value={hub().edutictacKeystrokes.duration}
+                  onInput={(e) => void window.pen.hub.update({ edutictacKeystrokes: { duration: Number(e.currentTarget.value) } })} />
+              </div>
+              <div class="settings-row settings-row-stack">
+                <span class="settings-row-label">Visible combinations · {hub().edutictacKeystrokes.maxVisible}</span>
+                <input type="range" min="1" max="6" step="1" value={hub().edutictacKeystrokes.maxVisible}
+                  onInput={(e) => void window.pen.hub.update({ edutictacKeystrokes: { maxVisible: Number(e.currentTarget.value) } })} />
+              </div>
+              <div class="settings-row settings-row-stack">
+                <span class="settings-row-label">Opacity · {Math.round(hub().edutictacKeystrokes.opacity * 100)}%</span>
+                <input type="range" min="30" max="100" step="5" value={hub().edutictacKeystrokes.opacity * 100}
+                  onInput={(e) => void window.pen.hub.update({ edutictacKeystrokes: { opacity: Number(e.currentTarget.value) / 100 } })} />
               </div>
             </div>
 

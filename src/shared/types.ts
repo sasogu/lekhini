@@ -165,6 +165,16 @@ export type HubStateUpdate = {
     borderWidth: number;
     opacity: number;
   }>;
+  edutictacKeystrokes?: Partial<{
+    enabled: boolean;
+    onlyShortcuts: boolean;
+    position: 'top-left' | 'top-center' | 'top-right' | 'bottom-left' | 'bottom-center' | 'bottom-right';
+    fontSize: number;
+    background: string;
+    opacity: number;
+    duration: number;
+    maxVisible: number;
+  }>;
   activeTool?: ToolId;
   drawMode?: boolean;
   settings?: Partial<ToolSettings>;
@@ -361,6 +371,10 @@ export type IpcChannel =
   | 'edutictac:click'
   | 'edutictac:magnifier-supported'
   | 'edutictac:magnifier-frame'
+  | 'edutictac:keystrokes:status'
+  | 'edutictac:keystrokes:request'
+  | 'edutictac:keystrokes:open-settings'
+  | 'edutictac:keystroke'
   | 'overlay:undo'
   | 'overlay:redo'
   | 'overlay:clear'

@@ -12,9 +12,14 @@ online e IA que ya ofrece Lekhini.
 | Click Effects | Botón y coordenada del último clic durante la animación | Solo ajustes visuales | Ninguna |
 | Spotlight | Coordenada actual o bloqueada | Ajustes visuales; la posición bloqueada no se guarda | Ninguna |
 | Magnifier | Frames de una región pequeña mientras esté activa | Ajustes visuales | Ninguna |
+| Keystrokes | Código físico y modificadores durante la animación | Solo ajustes visuales | Ninguna |
 
 Click Effects no escucha teclas, no guarda eventos y no modifica ni impide el
 clic original. Las capas del renderer usan `pointer-events: none`.
+
+Keystrokes no solicita caracteres ni convierte las pulsaciones en texto. No
+reconstruye palabras, no conserva secuencias y elimina cada combinación de la
+memoria al finalizar su breve presentación.
 
 ## Permisos
 

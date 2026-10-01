@@ -33,6 +33,13 @@ const api = {
     onFrame: (cb: (frame: unknown) => void) =>
       bind('edutictac:magnifier-frame', cb as (v: unknown) => void),
   },
+  keystrokes: {
+    hasPermission: () => ipcRenderer.invoke('edutictac:keystrokes:status' satisfies IpcChannel) as Promise<boolean>,
+    requestPermission: () => ipcRenderer.invoke('edutictac:keystrokes:request' satisfies IpcChannel) as Promise<boolean>,
+    openSettings: () => ipcRenderer.invoke('edutictac:keystrokes:open-settings' satisfies IpcChannel),
+    onKey: (cb: (event: { label: string; id: string }) => void) =>
+      bind('edutictac:keystroke', cb as (v: unknown) => void),
+  },
   hub: {
     get: () => ipcRenderer.invoke('hub:state:get' satisfies IpcChannel),
     update: (patch: HubStateUpdate) =>
