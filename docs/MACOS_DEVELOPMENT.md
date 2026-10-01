@@ -70,8 +70,9 @@ real de pantallas para esta prueba.
 
 Lekhini muestra su icono en el Dock en builds empaquetados. El evento
 `activate` muestra y enfoca la toolbar existente o la crea de nuevo si ya no
-existe. El botón de cierre de la toolbar sigue cerrando la aplicación mediante
-el IPC upstream `window:close`.
+existe. El botón rojo oculta la toolbar y conserva la aplicación y el icono de
+menú activos; al pulsarlo en el Dock o usar «Mostrar barra» se recupera. La
+opción «Salir de Lekhini» del menú termina la aplicación.
 
 La aplicación también mantiene un icono en la barra de menús mientras está
 abierta. Desde él se puede mostrar la barra, abrir Ajustes o elegir

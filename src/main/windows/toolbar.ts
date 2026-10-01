@@ -233,6 +233,12 @@ export function isToolbarOnRightSide(): boolean {
 
 export function registerToolbarIpc() {
   ipcMain.handle('window:close', () => {
+    if (process.platform === 'darwin') {
+      // Keep the menu-bar item alive so a hidden toolbar can always be
+      // recovered, even after closing it with the macOS traffic-light.
+      toolbar?.hide();
+      return;
+    }
     app.quit();
   });
   ipcMain.handle('window:minimize', () => {
