@@ -104,7 +104,10 @@ export function createToolbar(orientation: Orientation = 'h'): BrowserWindow {
   }
 
   subscribe(toolbar);
-  toolbar.once('closed', () => (toolbar = null));
+  const createdToolbar = toolbar;
+  toolbar.once('closed', () => {
+    if (toolbar === createdToolbar) toolbar = null;
+  });
 
   return toolbar;
 }

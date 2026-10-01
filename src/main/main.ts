@@ -19,6 +19,7 @@ import { registerMagnifierController } from '../edutictac/magnifier/controller';
 import { registerMacShortcutObserver } from '../edutictac/keystrokes/macos-shortcuts';
 import { registerTeacherModeController } from '../edutictac/teacher-mode/controller';
 import { registerDisplayRecovery } from '../edutictac/platform/display-recovery';
+import { registerMacMenu, showPresentationToolbar } from '../edutictac/platform/macos-menu';
 import { shutdown as shutdownOllama } from './ai/ollamaService';
 import { initAutoUpdates, registerUpdaterIpc } from './updater';
 import {
@@ -68,12 +69,17 @@ app.whenReady().then(async () => {
   }
   console.log('[pen] creating toolbar window');
   createToolbar(getState().orientation);
+  registerMacMenu();
 
   // Keep Lekhini discoverable in the macOS Dock. The toolbar is a
   // floating, capture-protected window, so without a Dock icon the app
   // can look as though it has disappeared after its window is closed.
   // Clicking the Dock icon should always bring the toolbar back.
   app.on('activate', () => {
+    if (process.platform === 'darwin') {
+      showPresentationToolbar();
+      return;
+    }
     const currentToolbar = getToolbar();
     if (currentToolbar && !currentToolbar.isDestroyed()) {
       currentToolbar.show();

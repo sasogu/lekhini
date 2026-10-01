@@ -73,6 +73,13 @@ Lekhini muestra su icono en el Dock en builds empaquetados. El evento
 existe. El botón de cierre de la toolbar sigue cerrando la aplicación mediante
 el IPC upstream `window:close`.
 
+La aplicación también mantiene un icono en la barra de menús mientras está
+abierta. Desde él se puede mostrar la barra, abrir Ajustes o elegir
+«Recuperar barra en esta pantalla», que reconstruye la ventana y la coloca en
+la pantalla donde está el puntero. «Pausar anotaciones» desactiva el modo de
+dibujo sin cerrar la aplicación. El icono desaparece al elegir «Salir de
+Lekhini» o cerrar la aplicación; volver a abrir Lekhini crea otro icono.
+
 ## Notarización
 
 Una firma Developer ID válida no implica que el paquete esté notarizado. El
