@@ -183,7 +183,11 @@ private struct MagnifierCapture {
             term.resume()
             interrupt.resume()
 
-            await withCheckedContinuation { (_: CheckedContinuation<Void, Never>) in }
+            // Keep the main dispatch queue alive for ScreenCaptureKit and the
+            // signal sources. A continuation that is never retained or
+            // resumed is treated as a programming error by the Swift runtime
+            // and can leave SCStream open without delivering frames.
+            dispatchMain()
         } catch {
             FileHandle.standardError.write(Data("magnifier provider: \(error)\n".utf8))
             exit(1)
