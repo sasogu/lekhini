@@ -38,3 +38,6 @@ forma parte de la composición.
 Se guarda la composición elegida, pero Teacher Mode arranca desactivado al
 iniciar Lekhini. Esto evita que una apertura normal comience a observar eventos
 o capturar una región sin una acción explícita del usuario.
+
+El botón rápido `T`, la activación conjunta y la desactivación del conjunto se
+han validado en el Mac de pruebas con una compilación firmada.

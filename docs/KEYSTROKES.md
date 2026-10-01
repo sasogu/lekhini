@@ -44,3 +44,9 @@ compatibles se construye un stub inactivo para mantener los builds actuales.
 - No representa teclas que no estén en el mapa físico conocido.
 - La distribución visible usa nombres y símbolos de macOS; no intenta inferir
   el carácter producido por la distribución de teclado del usuario.
+
+## Validación
+
+La representación de combinaciones, el filtro **Only shortcuts** y la
+integración con Input Monitoring se han validado en el Mac de pruebas con una
+compilación firmada.
