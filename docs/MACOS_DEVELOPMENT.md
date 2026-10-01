@@ -75,11 +75,10 @@ menú activos; al pulsarlo en el Dock o usar «Mostrar barra» se recupera. La
 opción «Salir de Lekhini» del menú termina la aplicación.
 
 La aplicación también mantiene un icono en la barra de menús mientras está
-abierta. Desde él se puede mostrar la barra, abrir Ajustes o elegir
-«Recuperar barra en esta pantalla», que reconstruye la ventana y la coloca en
-la pantalla donde está el puntero. «Pausar anotaciones» desactiva el modo de
-dibujo sin cerrar la aplicación. El icono desaparece al elegir «Salir de
-Lekhini» o cerrar la aplicación; volver a abrir Lekhini crea otro icono.
+abierta. Desde él se puede mostrar o recuperar la barra en la pantalla
+principal, abrir los ajustes completos, alternar las funciones de presentación
+y activar herramientas de anotación. «Salir de Lekhini» termina la aplicación;
+cerrar la toolbar conserva el icono para poder volver a mostrarla.
 
 ## Notarización
 

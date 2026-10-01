@@ -1,12 +1,54 @@
 import { app, Menu, nativeImage, screen, Tray } from 'electron';
-import { getState, patch } from '../../main/hub';
+import { getState, onChange, patch } from '../../main/hub';
 import { createToolbar, getToolbar } from '../../main/windows/toolbar';
+import type { ToolId } from '../../shared/types';
 
 let tray: Tray | null = null;
+let menu: Menu | null = null;
+let stopListening: (() => void) | null = null;
+
+const annotationTools: Array<{ id: ToolId; label: string }> = [
+  { id: 'pencil', label: 'Lápiz' },
+  { id: 'pen', label: 'Pluma' },
+  { id: 'highlighter', label: 'Resaltador' },
+  { id: 'eraser', label: 'Borrador' },
+  { id: 'hand', label: 'Mover lienzo' },
+  { id: 'line', label: 'Línea' },
+  { id: 'trendline', label: 'Línea de tendencia' },
+  { id: 'arrow', label: 'Flecha' },
+  { id: 'region', label: 'Rectángulo' },
+  { id: 'ellipse', label: 'Elipse' },
+  { id: 'fib', label: 'Fibonacci' },
+  { id: 'text', label: 'Texto' },
+  { id: 'snip', label: 'Captura de región' },
+];
+
+function syncMenuChecks(items: Menu): void {
+  const state = getState();
+  const checked: Record<string, boolean> = {
+    'module-cursor': state.edutictacCursor.enabled,
+    'module-clicks': state.edutictacClicks.enabled,
+    'module-keystrokes': state.edutictacKeystrokes.enabled,
+    'module-spotlight': state.edutictacSpotlight.enabled,
+    'module-magnifier': state.edutictacMagnifier.enabled,
+    'module-teacher': state.edutictacTeacherMode.enabled,
+    'annotation-drawing': state.drawMode,
+  };
+  for (const [id, value] of Object.entries(checked)) {
+    const item = items.getMenuItemById(id);
+    if (item) item.checked = value;
+  }
+  for (const tool of annotationTools) {
+    const item = items.getMenuItemById(`tool-${tool.id}`);
+    if (item) item.checked = state.activeTool === tool.id;
+  }
+}
 
 /** Explicit recovery also rebuilds the transparent window/compositor. */
 export function showPresentationToolbar(recreate = false, settings = false): void {
-  const display = screen.getDisplayNearestPoint(screen.getCursorScreenPoint());
+  // The menu-bar item may live on a different screen from the toolbar's
+  // intended destination. Always recover on the display macOS marks primary.
+  const display = screen.getPrimaryDisplay();
   let window = getToolbar();
   if (recreate && window && !window.isDestroyed()) {
     window.destroy();
@@ -53,14 +95,40 @@ export function registerMacMenu(): void {
   icon.setTemplateImage(true);
   tray = new Tray(icon);
   tray.setToolTip('Lekhini · EduTicTac Presenter');
-  tray.setContextMenu(Menu.buildFromTemplate([
+  menu = Menu.buildFromTemplate([
     { label: 'Mostrar barra', click: () => showPresentationToolbar() },
-    { label: 'Recuperar barra en esta pantalla', click: () => showPresentationToolbar(true) },
-    { label: 'Ajustes…', click: () => showPresentationToolbar(false, true) },
+    { label: 'Recuperar barra en la pantalla principal', click: () => showPresentationToolbar(true) },
+    { label: 'Ajustes completos…', click: () => showPresentationToolbar(false, true) },
     { type: 'separator' },
-    { label: 'Pausar anotaciones', click: () => patch({ drawMode: false }) },
+    {
+      label: 'Presentación',
+      submenu: [
+        { id: 'module-cursor', label: 'Resaltado del cursor', type: 'checkbox', checked: getState().edutictacCursor.enabled, click: () => patch({ edutictacCursor: { enabled: !getState().edutictacCursor.enabled } }) },
+        { id: 'module-clicks', label: 'Efectos de clic', type: 'checkbox', checked: getState().edutictacClicks.enabled, click: () => patch({ edutictacClicks: { enabled: !getState().edutictacClicks.enabled } }) },
+        { id: 'module-keystrokes', label: 'Teclas y atajos', type: 'checkbox', checked: getState().edutictacKeystrokes.enabled, click: () => patch({ edutictacKeystrokes: { enabled: !getState().edutictacKeystrokes.enabled } }) },
+        { id: 'module-spotlight', label: 'Spotlight', type: 'checkbox', checked: getState().edutictacSpotlight.enabled, click: () => patch({ edutictacSpotlight: { enabled: !getState().edutictacSpotlight.enabled } }) },
+        { id: 'module-magnifier', label: 'Lupa', type: 'checkbox', checked: getState().edutictacMagnifier.enabled, click: () => patch({ edutictacMagnifier: { enabled: !getState().edutictacMagnifier.enabled } }) },
+        { id: 'module-teacher', label: 'Teacher Mode', type: 'checkbox', checked: getState().edutictacTeacherMode.enabled, click: () => patch({ edutictacTeacherMode: { enabled: !getState().edutictacTeacherMode.enabled } }) },
+      ],
+    },
+    {
+      label: 'Herramienta de anotación',
+      submenu: [
+        { id: 'annotation-drawing', label: 'Modo de dibujo', type: 'checkbox', checked: getState().drawMode, click: () => patch({ drawMode: !getState().drawMode }) },
+        { type: 'separator' },
+        ...annotationTools.map(({ id, label }) => ({ id: `tool-${id}`, label, type: 'radio' as const, checked: getState().activeTool === id, click: () => patch({ activeTool: id, drawMode: true }) })),
+      ],
+    },
     { type: 'separator' },
     { label: 'Salir de Lekhini', click: () => app.quit() },
-  ]));
-  app.once('will-quit', () => { tray?.destroy(); tray = null; });
+  ]);
+  tray.setContextMenu(menu);
+  stopListening = onChange(() => { if (menu) syncMenuChecks(menu); });
+  app.once('will-quit', () => {
+    stopListening?.();
+    stopListening = null;
+    tray?.destroy();
+    tray = null;
+    menu = null;
+  });
 }
