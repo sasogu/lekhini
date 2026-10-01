@@ -18,6 +18,7 @@ import { registerMacClickObserver } from '../edutictac/platform/macos-clicks';
 import { registerMagnifierController } from '../edutictac/magnifier/controller';
 import { registerMacShortcutObserver } from '../edutictac/keystrokes/macos-shortcuts';
 import { registerTeacherModeController } from '../edutictac/teacher-mode/controller';
+import { registerDisplayRecovery } from '../edutictac/platform/display-recovery';
 import { shutdown as shutdownOllama } from './ai/ollamaService';
 import { initAutoUpdates, registerUpdaterIpc } from './updater';
 import {
@@ -85,6 +86,7 @@ app.whenReady().then(async () => {
   screen.on('display-added', syncOverlaysToDisplays);
   screen.on('display-removed', syncOverlaysToDisplays);
   screen.on('display-metrics-changed', syncOverlaysToDisplays);
+  registerDisplayRecovery();
 
   registerHotkeys();
 

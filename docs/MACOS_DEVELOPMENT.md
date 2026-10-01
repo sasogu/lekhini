@@ -57,6 +57,12 @@ Monitorización de entrada. No reconstruir entre la autorización y la prueba.
 
 ## Dock y cierre
 
+Al añadir, retirar o cambiar la configuración de un monitor, el adaptador
+`src/edutictac/platform/display-recovery.ts` recoloca la barra en la pantalla
+principal y limita sus dimensiones al área útil. Cierra los menús flotantes,
+pero conserva el panel de ajustes abierto. Esto evita que los controles queden
+fuera de pantalla al sustituir el monitor principal por uno más pequeño.
+
 Lekhini muestra su icono en el Dock en builds empaquetados. El evento
 `activate` muestra y enfoca la toolbar existente o la crea de nuevo si ya no
 existe. El botón de cierre de la toolbar sigue cerrando la aplicación mediante
@@ -69,4 +75,3 @@ build local puede indicar que omitió notarización si no están configuradas la
 credenciales de Apple. La notarización debe resolverse antes de distribuir un
 DMG a terceros; no es necesaria para validar localmente Spotlight, Cursor o
 Click Effects.
-
