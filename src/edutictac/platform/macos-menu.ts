@@ -1,6 +1,6 @@
-import { app, Menu, nativeImage, Tray } from 'electron';
+import { app, Menu, nativeImage, screen, Tray } from 'electron';
 import { getState, onChange, patch } from '../../main/hub';
-import { createToolbar, getToolbar, resizeToolbar } from '../../main/windows/toolbar';
+import { createToolbar, getToolbar } from '../../main/windows/toolbar';
 import type { ToolId } from '../../shared/types';
 
 let tray: Tray | null = null;
@@ -46,6 +46,9 @@ function syncMenuChecks(items: Menu): void {
 
 /** Explicit recovery also rebuilds the transparent window/compositor. */
 export function showPresentationToolbar(recreate = false, settings = false): void {
+  // Recover on the display containing the pointer. This matches the menu
+  // bar the user clicked and avoids moving the toolbar to another workspace.
+  const display = screen.getDisplayNearestPoint(screen.getCursorScreenPoint());
   let window = getToolbar();
   if (recreate && window && !window.isDestroyed()) {
     window.destroy();
@@ -57,8 +60,12 @@ export function showPresentationToolbar(recreate = false, settings = false): voi
   const toolbar = window!;
   const reveal = () => {
     if (toolbar.isDestroyed()) return;
-    const state = getState();
-    resizeToolbar(state.orientation, false, settings ? 'panel' : 'none', 'default');
+    const area = display.workArea;
+    const bounds = toolbar.getBounds();
+    const width = Math.min(bounds.width, Math.max(1, area.width - 16));
+    const height = Math.min(bounds.height, Math.max(1, area.height - 16));
+    const insetX = Math.min(64, Math.max(8, area.width - width - 8));
+    toolbar.setBounds({ x: area.x + insetX, y: area.y + 16, width, height });
     toolbar.setOpacity(1);
     toolbar.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true });
     toolbar.setAlwaysOnTop(true, 'screen-saver', 2);
@@ -91,7 +98,7 @@ export function registerMacMenu(): void {
   tray.setToolTip('Lekhini · EduTicTac Presenter');
   menu = Menu.buildFromTemplate([
     { label: 'Mostrar barra', click: () => showPresentationToolbar() },
-    { label: 'Recuperar barra en la pantalla principal', click: () => showPresentationToolbar(true) },
+    { label: 'Recuperar barra en esta pantalla', click: () => showPresentationToolbar(true) },
     { label: 'Ajustes completos…', click: () => showPresentationToolbar(false, true) },
     { type: 'separator' },
     {

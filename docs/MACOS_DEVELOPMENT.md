@@ -76,9 +76,11 @@ opción «Salir de Lekhini» del menú termina la aplicación.
 
 La aplicación también mantiene un icono en la barra de menús mientras está
 abierta. Desde él se puede mostrar o recuperar la barra en la pantalla
-principal, abrir los ajustes completos, alternar las funciones de presentación
-y activar herramientas de anotación. «Salir de Lekhini» termina la aplicación;
-cerrar la toolbar conserva el icono para poder volver a mostrarla.
+del puntero, abrir los ajustes completos, alternar las funciones de presentación
+y activar herramientas de anotación. La recuperación coloca la toolbar a
+64 píxeles del borde izquierdo del área útil para hacerla más visible. «Salir
+de Lekhini» termina la aplicación; cerrar la toolbar conserva el icono para
+poder volver a mostrarla.
 
 ## Notarización
 
