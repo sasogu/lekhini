@@ -2,6 +2,7 @@ import { app, Menu, nativeImage, screen, Tray } from 'electron';
 import { getState, onChange, patch } from '../../main/hub';
 import { createToolbar, getToolbar } from '../../main/windows/toolbar';
 import type { ToolId } from '../../shared/types';
+import { displayLinkCompatibilityEnabled, setDisplayLinkCompatibility } from './control-window-visibility';
 
 let tray: Tray | null = null;
 let menu: Menu | null = null;
@@ -100,6 +101,13 @@ export function registerMacMenu(): void {
     { label: 'Mostrar barra', click: () => showPresentationToolbar() },
     { label: 'Recuperar barra en esta pantalla', click: () => showPresentationToolbar(true) },
     { label: 'Ajustes completos…', click: () => showPresentationToolbar(false, true) },
+    {
+      id: 'displaylink-compatibility',
+      label: 'Compatibilidad DisplayLink (controles visibles en capturas)',
+      type: 'checkbox',
+      checked: displayLinkCompatibilityEnabled(),
+      click: (item) => setDisplayLinkCompatibility(item.checked),
+    },
     { type: 'separator' },
     {
       label: 'Presentación',

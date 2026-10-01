@@ -3,6 +3,7 @@ import path from 'node:path';
 import { SETTINGS_EXTRA, TOOLBAR_SIZES } from '../../shared/constants';
 import { subscribe } from '../hub';
 import type { Orientation } from '../../shared/types';
+import { registerControlWindow } from '../../edutictac/platform/control-window-visibility';
 
 const VITE_DEV_SERVER_URL = process.env.VITE_DEV_SERVER_URL;
 
@@ -95,7 +96,8 @@ export function createToolbar(orientation: Orientation = 'h'): BrowserWindow {
   // tool the user runs (Loom, QuickTime, Zoom share, etc.).
   // LEKHINI_CAPTURE_TOOLBAR=1 disables this — needed to screenshot the
   // toolbar itself for docs / UI review.
-  if (!process.env.LEKHINI_CAPTURE_TOOLBAR) toolbar.setContentProtection(true);
+  // The persisted DisplayLink compatibility option also disables it on Mac.
+  registerControlWindow(toolbar);
 
   if (VITE_DEV_SERVER_URL) {
     toolbar.loadURL(`${VITE_DEV_SERVER_URL}src/renderer/toolbar/index.html`);

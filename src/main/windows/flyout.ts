@@ -2,6 +2,7 @@ import { app, BrowserWindow, ipcMain, screen } from 'electron';
 import path from 'node:path';
 import { getState, patch, subscribe } from '../hub';
 import { getToolbar } from './toolbar';
+import { registerControlWindow } from '../../edutictac/platform/control-window-visibility';
 
 const VITE_DEV_SERVER_URL = process.env.VITE_DEV_SERVER_URL;
 
@@ -53,7 +54,7 @@ function createFlyoutWindow(): BrowserWindow {
   });
   win.setAlwaysOnTop(true, 'screen-saver', 3);
   win.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true });
-  if (!process.env.LEKHINI_CAPTURE_TOOLBAR) win.setContentProtection(true);
+  registerControlWindow(win);
 
   if (VITE_DEV_SERVER_URL) {
     win.loadURL(`${VITE_DEV_SERVER_URL}src/renderer/flyout/index.html`);

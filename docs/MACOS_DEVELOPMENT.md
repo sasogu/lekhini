@@ -82,6 +82,31 @@ y activar herramientas de anotación. La recuperación coloca la toolbar a
 de Lekhini» termina la aplicación; cerrar la toolbar conserva el icono para
 poder volver a mostrarla.
 
+## Pantallas conectadas mediante DisplayLink
+
+Si la barra se ve en un monitor pero desaparece al arrastrarla a otro, revisar
+si está activo DisplayLink Manager. Su salida usa captura de pantalla incluso
+cuando se mira directamente el monitor físico. La protección de captura de
+las ventanas de controles puede impedir que DisplayLink las muestre.
+
+En el menú superior de Lekhini, activar **Compatibilidad DisplayLink
+(controles visibles en capturas)**. Se guarda en la configuración existente
+como `edutictacDisplayLinkCompatibility`, se aplica inmediatamente a la barra
+y sus menús flotantes, y se conserva tras reiniciar. Por defecto está
+desactivada. Con esta opción, los controles también pueden aparecer en las
+capturas, videoconferencias y grabaciones; se pueden ocultar con el botón rojo.
+
+Diagnóstico comprobado el 1 de octubre de 2026: Mac M1 con DELL S2719DC y
+Samsung SMEX2220, DisplayLink Manager activo. Electron y Quartz informaban de
+una barra visible dentro del Samsung, y su renderer dibujaba correctamente.
+Cambiar coordenadas, prioridad o escritorio no resolvía el problema. Al
+desactivar `setContentProtection` sin moverla, el usuario confirmó que aparecía
+en Samsung y que podía arrastrarla entre ambos monitores. No atribuir este
+síntoma solamente a coordenadas o a la pantalla principal.
+
+Referencias: [DisplayLink y permisos de captura](https://support.displaylink.com/knowledgebase/articles/2008685-macos-screen-recording-permission),
+[Electron: protección de contenido](https://www.electronjs.org/docs/latest/api/browser-window#winsetcontentprotectionenable-macos-windows).
+
 ## Notarización
 
 Una firma Developer ID válida no implica que el paquete esté notarizado. El
