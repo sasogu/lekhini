@@ -39,6 +39,15 @@ export interface PersistedState {
     duration: number;
     maxVisible: number;
   };
+  edutictacTeacherMode: {
+    enabled: boolean;
+    cursor: boolean;
+    clicks: boolean;
+    keystrokes: boolean;
+    spotlight: boolean;
+    magnifier: boolean;
+    annotations: boolean;
+  };
   orientation: Orientation;
   theme: Theme;
   profile: ProfileId;
@@ -116,6 +125,15 @@ export const PERSISTED_DEFAULTS: PersistedState = {
     opacity: 0.88,
     duration: 1600,
     maxVisible: 3,
+  },
+  edutictacTeacherMode: {
+    enabled: false,
+    cursor: true,
+    clicks: true,
+    keystrokes: true,
+    spotlight: false,
+    magnifier: false,
+    annotations: true,
   },
   // First-run default is vertical, per design ask. Users can flip to
   // horizontal in Settings and that choice is then remembered.

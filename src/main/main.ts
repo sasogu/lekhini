@@ -17,6 +17,7 @@ import { registerCursorTracker } from '../edutictac/cursor/tracker';
 import { registerMacClickObserver } from '../edutictac/platform/macos-clicks';
 import { registerMagnifierController } from '../edutictac/magnifier/controller';
 import { registerMacShortcutObserver } from '../edutictac/keystrokes/macos-shortcuts';
+import { registerTeacherModeController } from '../edutictac/teacher-mode/controller';
 import { shutdown as shutdownOllama } from './ai/ollamaService';
 import { initAutoUpdates, registerUpdaterIpc } from './updater';
 import {
@@ -50,6 +51,7 @@ app.whenReady().then(async () => {
   registerMacClickObserver();
   registerMagnifierController();
   registerMacShortcutObserver();
+  registerTeacherModeController();
   registerOverlayIpc();
   registerPermissionsIpc();
   registerCaptureIpc();

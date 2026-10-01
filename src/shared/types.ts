@@ -175,6 +175,15 @@ export type HubStateUpdate = {
     duration: number;
     maxVisible: number;
   }>;
+  edutictacTeacherMode?: Partial<{
+    enabled: boolean;
+    cursor: boolean;
+    clicks: boolean;
+    keystrokes: boolean;
+    spotlight: boolean;
+    magnifier: boolean;
+    annotations: boolean;
+  }>;
   activeTool?: ToolId;
   drawMode?: boolean;
   settings?: Partial<ToolSettings>;

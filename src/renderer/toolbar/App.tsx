@@ -133,6 +133,15 @@ interface HubSnapshot {
     duration: number;
     maxVisible: number;
   };
+  edutictacTeacherMode: {
+    enabled: boolean;
+    cursor: boolean;
+    clicks: boolean;
+    keystrokes: boolean;
+    spotlight: boolean;
+    magnifier: boolean;
+    annotations: boolean;
+  };
   activeTool: ToolId;
   drawMode: boolean;
   settings: ToolSettings;
@@ -231,6 +240,7 @@ export function ToolbarApp() {
     edutictacSpotlight: { enabled: false, shape: 'circle', width: 280, height: 280, feather: 28, dimOpacity: 0.62, locked: false },
     edutictacMagnifier: { enabled: false, zoom: 2, size: 260, borderColor: '#ffffff', borderWidth: 4, opacity: 1 },
     edutictacKeystrokes: { enabled: false, onlyShortcuts: true, position: 'bottom-center', fontSize: 28, background: '#111111', opacity: 0.88, duration: 1600, maxVisible: 3 },
+    edutictacTeacherMode: { enabled: false, cursor: true, clicks: true, keystrokes: true, spotlight: false, magnifier: false, annotations: true },
     activeTool: 'pencil',
     drawMode: false,
     settings: { color: '#3a3a3c', width: 3, opacity: 1 },
@@ -993,6 +1003,24 @@ export function ToolbarApp() {
     if (last && tools.includes(last)) return last;
     return tools[0];
   };
+  const toggleTeacherMode = async (): Promise<void> => {
+    const teacher = hub().edutictacTeacherMode;
+    if (teacher.enabled) {
+      await window.pen.hub.update({ edutictacTeacherMode: { enabled: false } });
+      return;
+    }
+    if (teacher.clicks && !clickPermissionGranted()) {
+      const granted = await window.pen.clicks.requestAccess();
+      setClickPermissionGranted(granted);
+      if (!granted) return;
+    }
+    if (teacher.keystrokes && !keyPermissionGranted()) {
+      const granted = await window.pen.keystrokes.requestPermission();
+      setKeyPermissionGranted(granted);
+      if (!granted) return;
+    }
+    await window.pen.hub.update({ edutictacTeacherMode: { enabled: true } });
+  };
 
   return (
     <div
@@ -1075,6 +1103,12 @@ export function ToolbarApp() {
               >
                 {hub().drawMode ? Icons.eye() : Icons.eyeOff()}
               </ToolButton>
+              <ToolButton
+                active={hub().edutictacTeacherMode.enabled}
+                title={hub().edutictacTeacherMode.enabled ? 'Disable Teacher Mode' : 'Enable Teacher Mode'}
+                label="Teacher Mode"
+                onClick={() => void toggleTeacherMode()}
+              ><span aria-hidden="true" style={{ 'font-weight': 750 }}>T</span></ToolButton>
 
               <div class="tools-zone">
                 <For each={toolSlots()}>
@@ -1329,6 +1363,39 @@ export function ToolbarApp() {
                   }}
                 </For>
               </div>
+            </div>
+
+            <div class="settings-section">
+              <div class="settings-section-label">EduTicTac / Teacher Mode</div>
+              <div class="settings-row">
+                <span class="settings-row-label">Teacher Mode</span>
+                <button class={`settings-toggle ${hub().edutictacTeacherMode.enabled ? 'on' : ''}`}
+                  onClick={() => void toggleTeacherMode()}>
+                  <span>{hub().edutictacTeacherMode.enabled ? 'Active' : 'Off'}</span>
+                </button>
+              </div>
+              <div class="settings-hint">
+                Activates the selected presentation tools together. Their individual visual settings remain unchanged.
+              </div>
+              {([
+                ['cursor', 'Cursor highlight', cursorSupported()],
+                ['clicks', 'Click effects', true],
+                ['keystrokes', 'Keystrokes', true],
+                ['spotlight', 'Spotlight', cursorSupported()],
+                ['magnifier', 'Magnifier', magnifierSupported() && cursorSupported()],
+                ['annotations', 'Annotations', true],
+              ] as const).map(([key, label, available]) =>
+                <div class="settings-row">
+                  <span class="settings-row-label">{label}</span>
+                  <button class={`settings-toggle ${hub().edutictacTeacherMode[key] ? 'on' : ''}`}
+                    disabled={!available}
+                    onClick={() => void window.pen.hub.update({ edutictacTeacherMode: {
+                      [key]: !hub().edutictacTeacherMode[key],
+                    } })}>
+                    <span>{available ? (hub().edutictacTeacherMode[key] ? 'Included' : 'Excluded') : 'Unavailable'}</span>
+                  </button>
+                </div>
+              )}
             </div>
 
             <div class="settings-section">

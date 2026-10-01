@@ -49,6 +49,15 @@ export interface HubState {
     duration: number;
     maxVisible: number;
   };
+  edutictacTeacherMode: {
+    enabled: boolean;
+    cursor: boolean;
+    clicks: boolean;
+    keystrokes: boolean;
+    spotlight: boolean;
+    magnifier: boolean;
+    annotations: boolean;
+  };
   activeTool: ToolId;
   drawMode: boolean;
   settings: ToolSettings;
@@ -103,6 +112,7 @@ const state: HubState = {
   edutictacSpotlight: { ...PERSISTED_DEFAULTS.edutictacSpotlight, locked: false },
   edutictacMagnifier: { ...PERSISTED_DEFAULTS.edutictacMagnifier },
   edutictacKeystrokes: { ...PERSISTED_DEFAULTS.edutictacKeystrokes },
+  edutictacTeacherMode: { ...PERSISTED_DEFAULTS.edutictacTeacherMode },
   activeTool: 'pencil',
   drawMode: false,
   settings: { ...DEFAULT_SETTINGS },
@@ -273,6 +283,16 @@ export function hydrateFromPersistence(): void {
     maxVisible: typeof keystrokes?.maxVisible === 'number' && Number.isFinite(keystrokes.maxVisible)
       ? Math.max(1, Math.min(6, Math.round(keystrokes.maxVisible))) : PERSISTED_DEFAULTS.edutictacKeystrokes.maxVisible,
   };
+  const teacher = p.edutictacTeacherMode;
+  state.edutictacTeacherMode = {
+    enabled: false,
+    cursor: teacher?.cursor !== false,
+    clicks: teacher?.clicks !== false,
+    keystrokes: teacher?.keystrokes !== false,
+    spotlight: teacher?.spotlight === true,
+    magnifier: teacher?.magnifier === true,
+    annotations: teacher?.annotations !== false,
+  };
   state.orientation = p.orientation;
   state.theme = p.theme;
   state.profile = p.profile;
@@ -424,6 +444,17 @@ export function patch(update: HubStateUpdate) {
       state.edutictacKeystrokes = next;
       changed.add('edutictacKeystrokes');
       save('edutictacKeystrokes', next);
+    }
+  }
+  if (update.edutictacTeacherMode) {
+    const next = { ...state.edutictacTeacherMode, ...update.edutictacTeacherMode };
+    for (const key of ['enabled', 'cursor', 'clicks', 'keystrokes', 'spotlight', 'magnifier', 'annotations'] as const) {
+      if (typeof next[key] !== 'boolean') next[key] = state.edutictacTeacherMode[key];
+    }
+    if (JSON.stringify(next) !== JSON.stringify(state.edutictacTeacherMode)) {
+      state.edutictacTeacherMode = next;
+      changed.add('edutictacTeacherMode');
+      save('edutictacTeacherMode', next);
     }
   }
 
