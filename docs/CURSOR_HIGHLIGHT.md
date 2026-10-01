@@ -37,6 +37,9 @@ El renderer muestra anillo o punto sin interceptar entrada y lo desplaza con
 `translate3d`, permitiendo al compositor moverlo sin recalcular el layout en
 cada actualización. La configuración persiste tamaño, color y opacidad.
 
+El seguimiento nativo y la reducción perceptible del retraso se validaron en
+el Mac de pruebas con Cursor Highlight como única herramienta activa.
+
 La disponibilidad Wayland se determina conservadoramente a partir de la selección explícita Ozone de Electron 32; en una sesión Wayland con hint `auto`, también se marca como no disponible. No se ha verificado en un equipo Wayland real y debe contrastarse en GNOME/KDE/wlroots antes de distribuir. La CI del proyecto no tiene suite de tests; la implementación se validó con typecheck y compilación Vite, no con interacción real multi-monitor.
 
 ### Cambios de integración realizados
