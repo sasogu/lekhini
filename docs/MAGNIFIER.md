@@ -125,5 +125,7 @@ disponible.
 - Compilación y comprobación de tipos superadas en Linux.
 - Proveedor universal y aplicación firmada compilados correctamente en macOS.
 - Firma profunda de la aplicación y firma del proveedor verificadas.
-- Pendiente confirmar visualmente la captura regional, Retina, cambio de
-  monitor y liberación del permiso en el Mac de pruebas.
+- Captura regional y representación de la lente validadas visualmente en el
+  Mac de pruebas.
+- Pendiente ampliar la validación específica de Retina, cambio entre monitores
+  y liberación de recursos durante sesiones prolongadas.
