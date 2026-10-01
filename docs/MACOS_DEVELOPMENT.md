@@ -63,6 +63,11 @@ principal y limita sus dimensiones al área útil. Cierra los menús flotantes,
 pero conserva el panel de ajustes abierto. Esto evita que los controles queden
 fuera de pantalla al sustituir el monitor principal por uno más pequeño.
 
+Verificado en `56ff563`: una barra colocada en (-6000, -3000), con tamaño
+1800×1500 y ajustes abiertos, se recupera dentro del área útil 1920×965 del
+principal tras el evento de cambio de monitor. No se modificó la configuración
+real de pantallas para esta prueba.
+
 Lekhini muestra su icono en el Dock en builds empaquetados. El evento
 `activate` muestra y enfoca la toolbar existente o la crea de nuevo si ya no
 existe. El botón de cierre de la toolbar sigue cerrando la aplicación mediante

@@ -145,6 +145,11 @@ Un rechazo TCC al ejecutar el helper desde SSH no prueba un rechazo al
 ejecutarlo desde Lekhini. La validación debe hacerse dentro de la aplicación
 firmada, con su contexto real de lanzamiento.
 
+Verificación en la compilación firmada `56ff563`: 25 fotogramas recibidos en
+la primera prueba de tres segundos sobre el monitor principal de 1920×1080,
+canvas de lente presente, proceso auxiliar terminado al apagar y nuevos
+fotogramas al reactivar. La firma profunda del paquete también pasa.
+
 - Compilación y comprobación de tipos superadas en Linux.
 - Proveedor universal y aplicación firmada compilados correctamente en macOS.
 - Firma profunda de la aplicación y firma del proveedor verificadas.
