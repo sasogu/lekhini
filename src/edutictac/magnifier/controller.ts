@@ -7,6 +7,7 @@ import { getState, onChange } from '../../main/hub';
 import { screenStatus } from '../../main/permissions';
 import { getOverlays } from '../../main/windows/overlay';
 import { onCursorPosition, type CursorPosition } from '../cursor/tracker';
+import { regionCoversPoint } from './geometry';
 
 const MAGIC = Buffer.from('LMFR');
 const HEADER_SIZE = 16;
@@ -87,12 +88,7 @@ function tileStillCovers(point: CursorPosition): boolean {
   if (!tile || tile.displayId !== point.displayId) return false;
   const sampledRadius = getState().edutictacMagnifier.size / getState().edutictacMagnifier.zoom / 2;
   const margin = sampledRadius + 24;
-  return (
-    point.x - tile.x >= margin &&
-    point.y - tile.y >= margin &&
-    tile.x + tile.width - point.x >= margin &&
-    tile.y + tile.height - point.y >= margin
-  );
+  return regionCoversPoint(tile, point, margin);
 }
 
 function startProvider(nextTile: Tile): void {

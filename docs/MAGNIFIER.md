@@ -124,6 +124,27 @@ disponible.
 
 ## Estado de validación
 
+### Corrección de entrega de fotogramas (2026-10-01)
+
+El helper usa ahora el bucle de AppKit, con una tarea asíncrona que conserva
+el stream y los manejadores de señales hasta recibir SIGTERM/SIGINT. Se retira
+la espera con una continuación descartada y el `dispatchMain()` dentro de
+`async main`. Arrancar el proceso o recibir `startCapture` no demuestra que
+estén llegando muestras: la verificación mide fotogramas recibidos por el
+overlay y contenido dibujado en su canvas, sin guardar capturas.
+
+También se corrige la comprobación de cobertura en las esquinas, que podía
+reiniciar el helper en cada movimiento al exigir márgenes fuera del monitor.
+El renderer repinta al montar el canvas y carga los píxeles solo cuando cambia
+el fotograma, evitando repetir esa copia con cada evento del puntero.
+
+Pruebas de geometría (Node 22.6+):
+`node --experimental-strip-types --test src/edutictac/magnifier/geometry.test.mjs`.
+
+Un rechazo TCC al ejecutar el helper desde SSH no prueba un rechazo al
+ejecutarlo desde Lekhini. La validación debe hacerse dentro de la aplicación
+firmada, con su contexto real de lanzamiento.
+
 - Compilación y comprobación de tipos superadas en Linux.
 - Proveedor universal y aplicación firmada compilados correctamente en macOS.
 - Firma profunda de la aplicación y firma del proveedor verificadas.

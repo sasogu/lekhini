@@ -32,7 +32,8 @@ export function Magnifier() {
   const [settings, setSettings] = createSignal<Settings>(defaults);
   const [point, setPoint] = createSignal<{ x: number; y: number } | null>(null);
   const [frame, setFrame] = createSignal<Frame | null>(null);
-  let canvas!: HTMLCanvasElement;
+  const [canvasElement, setCanvasElement] = createSignal<HTMLCanvasElement>();
+  let uploadedFrame: Frame | null = null;
   const source = document.createElement('canvas');
 
   onMount(() => {
@@ -57,14 +58,18 @@ export function Magnifier() {
     const currentFrame = frame();
     const currentPoint = point();
     const currentSettings = settings();
+    const canvas = canvasElement();
     if (!canvas || !currentFrame || !currentPoint || !currentSettings.enabled) return;
 
-    source.width = currentFrame.width;
-    source.height = currentFrame.height;
-    const sourceContext = source.getContext('2d');
-    if (!sourceContext) return;
-    const pixels = Uint8ClampedArray.from(currentFrame.pixels);
-    sourceContext.putImageData(new ImageData(pixels, currentFrame.width, currentFrame.height), 0, 0);
+    if (uploadedFrame !== currentFrame) {
+      source.width = currentFrame.width;
+      source.height = currentFrame.height;
+      const sourceContext = source.getContext('2d');
+      if (!sourceContext) return;
+      const pixels = Uint8ClampedArray.from(currentFrame.pixels);
+      sourceContext.putImageData(new ImageData(pixels, currentFrame.width, currentFrame.height), 0, 0);
+      uploadedFrame = currentFrame;
+    }
 
     const deviceScale = Math.min(window.devicePixelRatio || 1, 2);
     const outputSize = Math.round(currentSettings.size * deviceScale);
@@ -88,7 +93,7 @@ export function Magnifier() {
   return (
     <Show when={settings().enabled && point() && frame()}>
       <canvas
-        ref={canvas}
+        ref={setCanvasElement}
         class="edutictac-magnifier"
         style={{
           left: `${point()!.x}px`,

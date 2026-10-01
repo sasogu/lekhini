@@ -1,6 +1,7 @@
 import CoreMedia
 import CoreVideo
 import Foundation
+import AppKit
 import ScreenCaptureKit
 
 private let frameMagic: [UInt8] = [0x4c, 0x4d, 0x46, 0x52] // LMFR
@@ -54,9 +55,15 @@ private enum CaptureError: Error, CustomStringConvertible {
 private final class FrameOutput: NSObject, SCStreamOutput {
     private let output = FileHandle.standardOutput
     private var writing = false
+    private var reportedFrame = false
+    private var reportedSample = false
 
     func stream(_ stream: SCStream, didOutputSampleBuffer sampleBuffer: CMSampleBuffer,
                 of outputType: SCStreamOutputType) {
+        if !reportedSample {
+            reportedSample = true
+            FileHandle.standardError.write(Data("magnifier: sample type=\(outputType.rawValue) valid=\(sampleBuffer.isValid) image=\(sampleBuffer.imageBuffer != nil)\n".utf8))
+        }
         guard outputType == .screen, sampleBuffer.isValid, !writing,
               let pixelBuffer = sampleBuffer.imageBuffer else { return }
 
@@ -71,6 +78,10 @@ private final class FrameOutput: NSObject, SCStreamOutput {
         let height = CVPixelBufferGetHeight(pixelBuffer)
         let sourceStride = CVPixelBufferGetBytesPerRow(pixelBuffer)
         let rowBytes = width * 4
+        if !reportedFrame {
+            reportedFrame = true
+            FileHandle.standardError.write(Data("magnifier: first frame \(width)x\(height)\n".utf8))
+        }
 
         // ScreenCaptureKit delivers BGRA. Convert to RGBA here so the
         // renderer can construct ImageData directly without a per-frame
@@ -162,7 +173,14 @@ private final class RegionCapture: NSObject, SCStreamDelegate {
 
 @main
 private struct MagnifierCapture {
-    static func main() async {
+    static func main() {
+        let application = NSApplication.shared
+        application.setActivationPolicy(.prohibited)
+        Task { await runCapture() }
+        application.run()
+    }
+
+    static func runCapture() async {
         do {
             let options = try Options.parse(CommandLine.arguments)
             let capture = RegionCapture()
@@ -172,22 +190,25 @@ private struct MagnifierCapture {
             signal(SIGINT, SIG_IGN)
             let term = DispatchSource.makeSignalSource(signal: SIGTERM, queue: .main)
             let interrupt = DispatchSource.makeSignalSource(signal: SIGINT, queue: .main)
-            let stop: () -> Void = {
-                Task {
-                    await capture.stop()
-                    exit(0)
+            FileHandle.standardError.write(Data("magnifier: stream started\n".utf8))
+            // Retain the capture and sources across the suspension. Never
+            // block the main actor with dispatchMain() inside async main.
+            await withCheckedContinuation { (continuation: CheckedContinuation<Void, Never>) in
+                var stopped = false
+                let stop: () -> Void = {
+                    guard !stopped else { return }
+                    stopped = true
+                    continuation.resume()
                 }
+                term.setEventHandler(handler: stop)
+                interrupt.setEventHandler(handler: stop)
+                term.resume()
+                interrupt.resume()
             }
-            term.setEventHandler(handler: stop)
-            interrupt.setEventHandler(handler: stop)
-            term.resume()
-            interrupt.resume()
-
-            // Keep the main dispatch queue alive for ScreenCaptureKit and the
-            // signal sources. A continuation that is never retained or
-            // resumed is treated as a programming error by the Swift runtime
-            // and can leave SCStream open without delivering frames.
-            dispatchMain()
+            term.cancel()
+            interrupt.cancel()
+            await capture.stop()
+            exit(0)
         } catch {
             FileHandle.standardError.write(Data("magnifier provider: \(error)\n".utf8))
             exit(1)
