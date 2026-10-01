@@ -105,9 +105,11 @@ frames RGBA mediante un protocolo binario con cabecera y longitud. Mantiene
 `queueDepth` en 2, no incluye cursor ni audio y libera el stream al recibir
 SIGTERM/SIGINT.
 
-`scripts/build-magnifier-provider.sh` genera un ejecutable universal arm64+x86_64
-en macOS. En otras plataformas crea un stub inactivo para conservar los builds
-existentes. El binario se empaqueta como recurso en `bin/magnifier-capture`.
+`scripts/build-magnifier-provider.sh` genera un helper `.app` universal
+arm64+x86_64 en macOS. Su identificador estable permite que TCC recuerde el
+permiso Screen Recording del proveedor entre compilaciones. En otras
+plataformas incluye un stub inactivo para conservar los builds existentes. El
+bundle se empaqueta como `bin/Lekhini Magnifier.app`.
 
 `src/edutictac/magnifier/controller.ts` inicia el proveedor solo cuando la lupa
 está activa. Reutiliza el cursor y los overlays existentes, valida el framing

@@ -31,9 +31,10 @@ let lastPoint: CursorPosition | null = null;
 let permissionNotified = false;
 
 function providerPath(): string {
-  return app.isPackaged
-    ? path.join(process.resourcesPath, 'bin', 'magnifier-capture')
-    : path.join(app.getAppPath(), 'native', 'macos-magnifier', 'build', 'magnifier-capture');
+  const bundlePath = app.isPackaged
+    ? path.join(process.resourcesPath, 'bin', 'Lekhini Magnifier.app')
+    : path.join(app.getAppPath(), 'native', 'macos-magnifier', 'build', 'Lekhini Magnifier.app');
+  return path.join(bundlePath, 'Contents', 'MacOS', 'magnifier-capture');
 }
 
 function supported(): boolean {
