@@ -1,0 +1,10 @@
+{
+  "name": "@edutictac/macos-pointer-observer",
+  "version": "0.1.0",
+  "private": true,
+  "gypfile": false,
+  "main": "index.js",
+  "dependencies": {
+    "node-addon-api": "^8.9.2"
+  }
+}

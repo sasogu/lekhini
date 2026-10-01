@@ -4,6 +4,18 @@ import { getOverlays } from '../../main/windows/overlay';
 import { isCursorPositionSupported, readCursorPosition } from '../platform/cursor-position';
 
 let timer: ReturnType<typeof setInterval> | null = null;
+type NativePointerObserver = {
+  hasPermission(): boolean;
+  start(callback: (point: { x: number; y: number }) => void): boolean;
+  stop(): void;
+};
+let nativeObserver: NativePointerObserver | null = null;
+let nativeActive = false;
+try {
+  if (process.platform === 'darwin') nativeObserver = require('@edutictac/macos-pointer-observer') as NativePointerObserver;
+} catch (error) {
+  console.warn('[EduTicTac] native pointer observer unavailable; using polling fallback', error);
+}
 let previousDisplayId: number | null = null;
 let previousX = Number.NaN;
 let previousY = Number.NaN;
@@ -39,22 +51,25 @@ function hidePrevious(): void {
 function stop(): void {
   if (timer) clearInterval(timer);
   timer = null;
+  if (nativeActive) nativeObserver?.stop();
+  nativeActive = false;
   hidePrevious();
 }
 
 function pause(): void {
   if (timer) clearInterval(timer);
   timer = null;
+  if (nativeActive) nativeObserver?.stop();
+  nativeActive = false;
 }
 
-function tick(): void {
-  const point = readCursorPosition();
+function publish(point: { x: number; y: number }): void {
   const display = screen.getDisplayNearestPoint(point);
   const overlay = getOverlays().get(display.id);
   if (!overlay || overlay.isDestroyed()) return;
   if (previousDisplayId !== display.id) hidePrevious();
-  const x = point.x - display.bounds.x;
-  const y = point.y - display.bounds.y;
+  const x = Math.round(point.x - display.bounds.x);
+  const y = Math.round(point.y - display.bounds.y);
   if (previousDisplayId === display.id && x === previousX && y === previousY) return;
   previousDisplayId = display.id;
   previousX = x;
@@ -71,6 +86,17 @@ function tick(): void {
   for (const listener of positionListeners) listener(position);
 }
 
+function tick(): void { publish(readCursorPosition()); }
+
+function startTracking(): void {
+  tick();
+  if (nativeObserver?.hasPermission()) {
+    nativeActive = nativeObserver.start(publish);
+    if (nativeActive) return;
+  }
+  timer = setInterval(tick, 16);
+}
+
 function sync(): void {
   const state = getState();
   const needsPosition =
@@ -83,7 +109,8 @@ function sync(): void {
     isCursorPositionSupported() &&
     state.edutictacSpotlight.enabled &&
     state.edutictacSpotlight.locked &&
-    !state.edutictacCursor.enabled
+    !state.edutictacCursor.enabled &&
+    !state.edutictacMagnifier.enabled
   ) {
     pause();
     return;
@@ -92,9 +119,8 @@ function sync(): void {
     stop();
     return;
   }
-  if (timer) return;
-  tick();
-  timer = setInterval(tick, 16);
+  if (timer || nativeActive) return;
+  startTracking();
 }
 
 export function registerCursorTracker(): void {

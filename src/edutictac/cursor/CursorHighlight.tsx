@@ -20,7 +20,8 @@ export function CursorHighlight() {
   return (
     <Show when={settings().enabled && point()}>
       {(p) => <div class={`edutictac-cursor edutictac-cursor-${settings().shape}`} style={{
-        left: `${p().x}px`, top: `${p().y}px`, width: `${settings().size}px`, height: `${settings().size}px`,
+        transform: `translate3d(${p().x}px, ${p().y}px, 0) translate(-50%, -50%)`,
+        width: `${settings().size}px`, height: `${settings().size}px`,
         color: settings().color, opacity: settings().opacity,
       }} />}
     </Show>

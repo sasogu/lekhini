@@ -24,7 +24,18 @@ El ajuste se conserva como `edutictacCursor` en `PersistedState`, con activació
 
 ## Implementación actual
 
-La primera versión está en `src/edutictac/`. El proceso principal consulta cada 16 ms únicamente mientras la preferencia está activa, envía posiciones solo cuando cambian y solo al overlay de la pantalla bajo el cursor. Desactiva el temporizador al apagar la función o cerrar la aplicación. El renderer muestra anillo o punto sin interceptar entrada. La configuración se persiste y valida tamaño, color y opacidad. No se han añadido dependencias.
+La implementación está en `src/edutictac/`. En macOS,
+`native/macos-pointer-observer` recibe movimientos mediante un `CGEventTap`
+pasivo. Esto evita consultar continuamente la posición y sigue con menor
+latencia los monitores de alta frecuencia. Si el proveedor nativo o Input
+Monitoring no están disponibles, el proceso conserva la consulta cada 16 ms
+como fallback. En ambos casos envía posiciones solo cuando cambian y únicamente
+al overlay de la pantalla bajo el cursor, y libera el proveedor al apagar la
+función o cerrar la aplicación.
+
+El renderer muestra anillo o punto sin interceptar entrada y lo desplaza con
+`translate3d`, permitiendo al compositor moverlo sin recalcular el layout en
+cada actualización. La configuración persiste tamaño, color y opacidad.
 
 La disponibilidad Wayland se determina conservadoramente a partir de la selección explícita Ozone de Electron 32; en una sesión Wayland con hint `auto`, también se marca como no disponible. No se ha verificado en un equipo Wayland real y debe contrastarse en GNOME/KDE/wlroots antes de distribuir. La CI del proyecto no tiene suite de tests; la implementación se validó con typecheck y compilación Vite, no con interacción real multi-monitor.
 
