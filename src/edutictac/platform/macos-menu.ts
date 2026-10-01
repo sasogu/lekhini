@@ -1,6 +1,6 @@
-import { app, Menu, nativeImage, screen, Tray } from 'electron';
+import { app, Menu, nativeImage, Tray } from 'electron';
 import { getState, onChange, patch } from '../../main/hub';
-import { createToolbar, getToolbar } from '../../main/windows/toolbar';
+import { createToolbar, getToolbar, resizeToolbar } from '../../main/windows/toolbar';
 import type { ToolId } from '../../shared/types';
 
 let tray: Tray | null = null;
@@ -46,9 +46,6 @@ function syncMenuChecks(items: Menu): void {
 
 /** Explicit recovery also rebuilds the transparent window/compositor. */
 export function showPresentationToolbar(recreate = false, settings = false): void {
-  // The menu-bar item may live on a different screen from the toolbar's
-  // intended destination. Always recover on the display macOS marks primary.
-  const display = screen.getPrimaryDisplay();
   let window = getToolbar();
   if (recreate && window && !window.isDestroyed()) {
     window.destroy();
@@ -60,11 +57,8 @@ export function showPresentationToolbar(recreate = false, settings = false): voi
   const toolbar = window!;
   const reveal = () => {
     if (toolbar.isDestroyed()) return;
-    const area = display.workArea;
-    const bounds = toolbar.getBounds();
-    const width = Math.min(bounds.width, Math.max(1, area.width - 32));
-    const height = Math.min(bounds.height, Math.max(1, area.height - 32));
-    toolbar.setBounds({ x: area.x + 16, y: area.y + 16, width, height });
+    const state = getState();
+    resizeToolbar(state.orientation, false, settings ? 'panel' : 'none', 'default');
     toolbar.setOpacity(1);
     toolbar.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true });
     toolbar.setAlwaysOnTop(true, 'screen-saver', 2);
