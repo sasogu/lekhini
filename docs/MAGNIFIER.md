@@ -56,11 +56,19 @@ Fuente: [Electron `desktopCapturer`](https://www.electronjs.org/docs/latest/api/
 
 ## Otras plataformas
 
+**Actualización 2026-10-13:** GNOME 48 dispone de un adaptador para su zoom
+nativo del escritorio, controlado desde la barra y Teacher Mode. Conserva las
+preferencias de accesibilidad previas y las restaura al finalizar la sesión
+de Lekhini. Este modo no transfiere buffers de píxeles ni utiliza los
+controles de diámetro/borde de la lente macOS. Instalación y pruebas en
+[GNOME_WAYLAND.md](./GNOME_WAYLAND.md).
+
 | Plataforma | Proveedor recomendado | Estado |
 | --- | --- | --- |
 | Windows | Desktop Duplication o Windows Graphics Capture con recorte GPU y copia a CPU solo de la región | Diseño pendiente de adaptador |
 | Linux X11 | `XShmGetImage` de una región pequeña | Diseño pendiente de adaptador |
-| Linux Wayland | ScreenCast portal + PipeWire | Parcial: el portal captura una fuente consentida, pero no ofrece posición global universal para seguir el cursor |
+| GNOME 48 Wayland | Zoom nativo de GNOME mediante puente v3 | Integrado; probado en GNOME aislado, pendiente de pantallas físicas |
+| Otros compositores Wayland | ScreenCast portal + PipeWire | Pendiente: el portal captura una fuente consentida, pero no ofrece posición global universal para seguir el cursor |
 
 En Wayland nativo la lupa debe marcarse como no disponible cuando no exista un
 mecanismo fiable de posición. No se leerán dispositivos de entrada, no se

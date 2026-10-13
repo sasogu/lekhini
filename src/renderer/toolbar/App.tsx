@@ -1382,7 +1382,7 @@ export function ToolbarApp() {
                 ['clicks', 'Click effects', true],
                 ['keystrokes', 'Keystrokes', true],
                 ['spotlight', 'Spotlight', cursorSupported()],
-                ['magnifier', 'Magnifier', magnifierSupported() && cursorSupported()],
+                ['magnifier', platform() === 'linux' ? 'Desktop zoom' : 'Magnifier', magnifierSupported() && cursorSupported()],
                 ['annotations', 'Annotations', true],
               ] as const).map(([key, label, available]) =>
                 <div class="settings-row">
@@ -1655,11 +1655,15 @@ export function ToolbarApp() {
             <div class="settings-section">
               <div class="settings-section-label">EduTicTac / Magnifier</div>
               <div class="settings-row">
-                <span class="settings-row-label">Magnifier</span>
+                <span class="settings-row-label">{platform() === 'linux' ? 'Desktop zoom' : 'Magnifier'}</span>
                 <button
                   class={`settings-toggle ${hub().edutictacMagnifier.enabled ? 'on' : ''}`}
                   disabled={!magnifierSupported() || !cursorSupported()}
-                  title={magnifierSupported() ? 'Magnify a small region around the pointer' : 'The regional capture provider is available on macOS builds'}
+                  title={magnifierSupported()
+                    ? (isMac() ? 'Magnify a small region around the pointer' : 'Use GNOME desktop zoom')
+                    : (isMac() ? 'The regional capture provider is unavailable'
+                      : platform() === 'linux' ? 'Enable Lekhini Pointer Bridge version 3 and restart your GNOME session'
+                        : 'The magnifier provider is unavailable on this platform')}
                   onClick={() => void window.pen.hub.update({
                     edutictacMagnifier: { enabled: !hub().edutictacMagnifier.enabled },
                   })}
@@ -1670,7 +1674,11 @@ export function ToolbarApp() {
                 </button>
               </div>
               <div class="settings-hint">
-                Captures only a small local region with ScreenCaptureKit. Frames stay in memory.
+                {isMac()
+                  ? 'Captures only a small local region with ScreenCaptureKit. Frames stay in memory.'
+                  : platform() === 'linux'
+                    ? 'Uses GNOME desktop zoom with your system preferences. Restores the previous zoom when turned off.'
+                    : 'A magnifier provider is required on this platform.'}
               </div>
               <div class="settings-row">
                 <span class="settings-row-label">Zoom</span>
@@ -1685,6 +1693,7 @@ export function ToolbarApp() {
                   <option value="4">4×</option>
                 </select>
               </div>
+              <Show when={isMac()}>
               <div class="settings-row settings-row-stack">
                 <span class="settings-row-label">Diameter · {hub().edutictacMagnifier.size}px</span>
                 <input type="range" min="160" max="420" step="10" value={hub().edutictacMagnifier.size}
@@ -1709,6 +1718,7 @@ export function ToolbarApp() {
                   disabled={!hub().edutictacMagnifier.enabled}
                   onInput={(e) => void window.pen.hub.update({ edutictacMagnifier: { opacity: Number(e.currentTarget.value) / 100 } })} />
               </div>
+              </Show>
             </div>
 
             <div class="settings-section">

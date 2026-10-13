@@ -47,6 +47,8 @@ extraResources:
     to: bin/gnome-pointer-client.js
   - from: native/gnome-pointer/buttons.mjs
     to: bin/buttons.mjs
+  - from: native/gnome-pointer/magnifier-client.js
+    to: bin/gnome-magnifier-client.js
   - from: native/gnome-pointer/extension
     to: gnome-pointer-extension
   - from: resources/intent

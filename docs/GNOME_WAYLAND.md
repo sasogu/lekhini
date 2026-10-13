@@ -38,8 +38,8 @@ que requieren posición global se marcan como no disponibles en Wayland.
 Una sesión X11 sigue utilizando la API de Electron; macOS conserva su
 observador nativo.
 
-El cliente se ejecuta solo mientras cursor, Spotlight, lupa o efectos de clic
-necesitan observar el ratón. Un único proceso GJS compartido consulta a GNOME
+El cliente de posición se ejecuta solo mientras cursor, Spotlight o efectos
+de clic necesitan observar el ratón. Un único proceso GJS compartido consulta a GNOME
 de forma asíncrona cada 8 ms, con una sola petición en curso, y publica
 únicamente cambios. Solo pide el estado de botones cuando Click effects está
 activado; con solo el círculo activo no consulta botones. Al apagar las ayudas o salir de la app
@@ -74,8 +74,61 @@ Esto se comprobó con un dispositivo virtual dentro del compositor de prueba.
 Una extensión de versión 1 sigue proporcionando el círculo a la aplicación
 nueva, pero no los clics. Tras actualizar la extensión, cerrar sesión y volver
 a entrar para cargar la versión 2. Activar **EduTicTac / Click effects → On**;
-puede incluirse también en Teacher Mode. La lupa y la visualización de teclas
-siguen necesitando sus proveedores de macOS.
+puede incluirse también en Teacher Mode. La visualización de teclas sigue
+necesitando su proveedor de macOS.
+
+## Spotlight y zoom del escritorio (versión 3)
+
+Para instalar o actualizar el directorio completo del puente desde el
+repositorio, ejecutar `bash scripts/install-gnome-bridge.sh` en la sesión
+gráfica. El paquete portátil Linux incluye el mismo script como
+`install-gnome-bridge.sh`, junto con `launch.sh` y `LEEME-GNOME.txt`.
+
+Spotlight reutiliza el puente de posición: la abertura sigue al ratón sobre
+aplicaciones nativas, permite bloquearse con el botón de la barra y se
+desactiva junto con Teacher Mode. El efecto se pinta en el monitor del cursor.
+Los atajos globales de Electron sobre superficies Wayland requieren todavía
+su validación independiente; el bloqueo por botón está probado.
+
+La versión 3 añade **Desktop zoom** en la barra y en la composición de Teacher
+Mode. Controla el ampliador nativo de GNOME con niveles 1.5x, 2x, 3x y 4x, usando
+las preferencias de posición, seguimiento y filtros configuradas en GNOME.
+No cambia el diámetro, borde ni opacidad de la lente macOS: esos controles
+solo se muestran en macOS. En GNOME se utiliza el zoom del escritorio y no
+se transfieren ni guardan fotogramas en Lekhini.
+
+`SetMagnifier` mantiene una sesión exclusiva asociada al cliente D-Bus. Guarda
+el estado anterior de activación y ampliación y lo restaura al apagar,
+desconectar el cliente, bloquear la sesión o desactivar la extensión. Si el
+usuario cambió un valor mediante GNOME mientras Lekhini estaba activo, ese
+valor nuevo se conserva. Un zoom de accesibilidad que ya estuviera activo
+permanece activo al salir de Lekhini.
+
+El helper `gnome-magnifier-client.js` recibe configuración por stdin; cuando
+Electron termina, EOF cierra la conexión D-Bus y GNOME libera la sesión aunque
+Electron no haya completado su cierre normal. Con solo Desktop zoom activo no
+se inicia el seguimiento GJS del cursor: el ampliador nativo hace su propio
+seguimiento.
+
+Tras instalar el puente v3 hay que cerrar sesión y volver a entrar para que
+GNOME cargue los métodos nuevos. La app sigue admitiendo círculo con v1 y
+clics con v2, y marca el zoom como no disponible hasta cargar v3.
+
+Pruebas adicionales:
+
+```sh
+node --test native/gnome-pointer/buttons.test.mjs native/gnome-pointer/zoom-lease.test.mjs
+dbus-run-session -- python3 native/gnome-pointer/test-headless.py --app
+```
+
+La prueba usa un GNOME 48.7 y Electron aislados con configuración temporal.
+Comprueba el actor del ampliador nativo, zoom 2x/4x, exclusividad y restauración
+tras EOF y terminación abrupta. Dentro de Electron comprueba la abertura SVG
+de Spotlight tras mover el ratón virtual, bloquear, desbloquear y apagar; y
+la activación/desactivación conjunta de Spotlight y Desktop zoom en Teacher
+Mode. Las pruebas no modifican la sesión ni las preferencias del escritorio
+actual. Pendiente de comprobar estas funciones en las tres pantallas físicas
+del ThinkPad, que estaba desconectado durante esta implementación.
 
 Pruebas del 2026-10-13:
 

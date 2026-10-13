@@ -3,11 +3,13 @@ import { spawn, type ChildProcessByStdio } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
 import type { Readable } from 'node:stream';
-import { getState, onChange } from '../../main/hub';
+import { getState, onChange, patch } from '../../main/hub';
 import { screenStatus } from '../../main/permissions';
 import { getOverlays } from '../../main/windows/overlay';
 import { onCursorPosition, type CursorPosition } from '../cursor/tracker';
 import { regionCoversPoint } from './geometry';
+import { hasGnomeMagnifier } from '../platform/gnome-pointer';
+import { startGnomeMagnifier } from '../platform/gnome-magnifier';
 
 const MAGIC = Buffer.from('LMFR');
 const HEADER_SIZE = 16;
@@ -30,6 +32,7 @@ let tile: Tile | null = null;
 let buffered = Buffer.alloc(0);
 let lastPoint: CursorPosition | null = null;
 let permissionNotified = false;
+let gnome: ReturnType<typeof startGnomeMagnifier> | null = null;
 
 function providerPath(): string {
   const bundlePath = app.isPackaged
@@ -182,10 +185,14 @@ function handlePosition(point: CursorPosition | null): void {
 }
 
 export function registerMagnifierController(): void {
-  ipcMain.handle('edutictac:magnifier-supported', () => supported());
+  ipcMain.handle('edutictac:magnifier-supported', () => supported() || hasGnomeMagnifier());
   const unsubscribePosition = onCursorPosition(handlePosition);
   const unsubscribeState = onChange((_state, changed) => {
     if (!changed.has('edutictacMagnifier')) return;
+    if (hasGnomeMagnifier()) {
+      syncGnome();
+      return;
+    }
     stopProvider();
     handlePosition(lastPoint);
   });
@@ -193,5 +200,22 @@ export function registerMagnifierController(): void {
     unsubscribePosition();
     unsubscribeState();
     stopProvider();
+    gnome?.stop();
+    gnome = null;
   });
+  if (hasGnomeMagnifier()) syncGnome();
+}
+
+function syncGnome(): void {
+  const settings = getState().edutictacMagnifier;
+  if (!settings.enabled) {
+    gnome?.stop();
+    gnome = null;
+    return;
+  }
+  if (!gnome) gnome = startGnomeMagnifier(() => {
+    gnome = null;
+    patch({ edutictacMagnifier: { enabled: false } });
+  });
+  gnome.update({ enabled: true, zoom: settings.zoom });
 }

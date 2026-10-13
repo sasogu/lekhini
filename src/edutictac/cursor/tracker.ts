@@ -2,7 +2,7 @@ import { app, ipcMain, screen } from 'electron';
 import { getState, onChange } from '../../main/hub';
 import { getOverlays } from '../../main/windows/overlay';
 import { isCursorPositionSupported, readCursorPosition } from '../platform/cursor-position';
-import { hasGnomePointer, probeGnomePointer, startGnomePointer } from '../platform/gnome-pointer';
+import { hasGnomePointer, hasGnomeMagnifier, probeGnomePointer, startGnomePointer } from '../platform/gnome-pointer';
 
 let timer: ReturnType<typeof setInterval> | null = null;
 type NativePointerObserver = {
@@ -115,7 +115,7 @@ function sync(): void {
   const needsPosition =
     state.edutictacCursor.enabled ||
     (state.edutictacSpotlight.enabled && !state.edutictacSpotlight.locked) ||
-    state.edutictacMagnifier.enabled;
+    (state.edutictacMagnifier.enabled && !hasGnomeMagnifier());
   // A locked spotlight deliberately keeps the last point visible. Stop
   // polling without sending the normal null/clear event to that overlay.
   if (
@@ -123,7 +123,7 @@ function sync(): void {
     state.edutictacSpotlight.enabled &&
     state.edutictacSpotlight.locked &&
     !state.edutictacCursor.enabled &&
-    !state.edutictacMagnifier.enabled
+    (!state.edutictacMagnifier.enabled || hasGnomeMagnifier())
   ) {
     pause();
     return;
