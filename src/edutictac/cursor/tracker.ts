@@ -2,6 +2,7 @@ import { app, ipcMain, screen } from 'electron';
 import { getState, onChange } from '../../main/hub';
 import { getOverlays } from '../../main/windows/overlay';
 import { isCursorPositionSupported, readCursorPosition } from '../platform/cursor-position';
+import { hasGnomePointer, probeGnomePointer, startGnomePointer } from '../platform/gnome-pointer';
 
 let timer: ReturnType<typeof setInterval> | null = null;
 type NativePointerObserver = {
@@ -11,6 +12,7 @@ type NativePointerObserver = {
 };
 let nativeObserver: NativePointerObserver | null = null;
 let nativeActive = false;
+let stopGnome: (() => void) | null = null;
 try {
   if (process.platform === 'darwin') nativeObserver = require('@edutictac/macos-pointer-observer') as NativePointerObserver;
 } catch (error) {
@@ -49,6 +51,8 @@ function hidePrevious(): void {
 }
 
 function stop(): void {
+  stopGnome?.();
+  stopGnome = null;
   if (timer) clearInterval(timer);
   timer = null;
   if (nativeActive) nativeObserver?.stop();
@@ -57,6 +61,8 @@ function stop(): void {
 }
 
 function pause(): void {
+  stopGnome?.();
+  stopGnome = null;
   if (timer) clearInterval(timer);
   timer = null;
   if (nativeActive) nativeObserver?.stop();
@@ -89,6 +95,13 @@ function publish(point: { x: number; y: number }): void {
 function tick(): void { publish(readCursorPosition()); }
 
 function startTracking(): void {
+  if (hasGnomePointer()) {
+    stopGnome = startGnomePointer((point) => point ? publish(point) : hidePrevious(), () => {
+      stopGnome = null;
+      hidePrevious();
+    });
+    return;
+  }
   tick();
   if (nativeObserver?.hasPermission()) {
     nativeActive = nativeObserver.start(publish);
@@ -119,11 +132,12 @@ function sync(): void {
     stop();
     return;
   }
-  if (timer || nativeActive) return;
+  if (timer || nativeActive || stopGnome) return;
   startTracking();
 }
 
-export function registerCursorTracker(): void {
+export async function registerCursorTracker(): Promise<void> {
+  await probeGnomePointer();
   ipcMain.handle('edutictac:cursor-supported', () => isCursorPositionSupported());
   onChange((_state, changed) => {
     if (

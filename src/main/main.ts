@@ -49,7 +49,7 @@ app.whenReady().then(async () => {
   hydrateFromPersistence();
 
   registerHubIpc();
-  registerCursorTracker();
+  await registerCursorTracker();
   registerMacClickObserver();
   registerMagnifierController();
   registerMacShortcutObserver();

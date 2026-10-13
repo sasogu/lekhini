@@ -2,6 +2,12 @@
 
 ## Resultado de viabilidad
 
+**Actualización Linux, 2026-10-13:** XWayland en una sesión Wayland no basta
+para consultar el ratón sobre aplicaciones nativas. En GNOME 48 se utiliza
+ahora [Lekhini Pointer Bridge](./GNOME_WAYLAND.md); sin el puente, se desactiva
+el seguimiento en sesiones Wayland. Las decisiones de XWayland descritas
+debajo corresponden al diseño inicial, anterior a la prueba en el ThinkPad.
+
 Lekhini usa Electron 32. La API `screen.getCursorScreenPoint()` ofrece la posición actual en DIP y no emite eventos de movimiento. Por ello, en macOS, Windows y X11 el MVP puede consultar posición solo mientras Cursor Highlight esté activo, limitar actualizaciones a la frecuencia de refresco y detener el temporizador al apagarlo. El overlay existente usa los mismos bounds DIP por display; el proceso principal puede seleccionar la pantalla con `screen.getDisplayNearestPoint()` y mandar coordenadas locales únicamente a esa ventana.
 
 Wayland nativo queda fuera de esta implementación. Electron documenta que la llamada no está soportada y devuelve `{0, 0}`; su fuente de Electron contiene explícitamente esa rama. No dibujar un indicador fijo en la esquina ni intentar deducir el movimiento global a partir de eventos de otras superficies. El protocolo Wayland entrega movimiento con coordenadas locales a la superficie con foco, no a una app en segundo plano. XWayland solo es una alternativa si Electron se inicia efectivamente en X11 y el entorno dispone de XWayland; no equivale a soporte Wayland nativo.

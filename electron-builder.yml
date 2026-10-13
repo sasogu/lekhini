@@ -43,6 +43,12 @@ files:
 # Bundled per-profile RAG seed examples ("intent files"), read at
 # runtime from process.resourcesPath/intent.
 extraResources:
+  - from: native/gnome-pointer/client.js
+    to: bin/gnome-pointer-client.js
+  - from: native/gnome-pointer/buttons.mjs
+    to: bin/buttons.mjs
+  - from: native/gnome-pointer/extension
+    to: gnome-pointer-extension
   - from: resources/intent
     to: intent
   - from: native/macos-magnifier/build/Lekhini Magnifier.app

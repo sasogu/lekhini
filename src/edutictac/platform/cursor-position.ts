@@ -1,7 +1,11 @@
 import { app, screen } from 'electron';
+import { hasGnomePointer, usesWaylandSession } from './gnome-pointer';
 
 export function isCursorPositionSupported(): boolean {
   if (process.platform !== 'linux') return true;
+  // XWayland reports only motion over X11 surfaces. It is not a global
+  // pointer provider in a Wayland session, even with --ozone-platform=x11.
+  if (usesWaylandSession()) return hasGnomePointer();
   // Electron 32 uses X11 unless Wayland is explicitly selected. Never query
   // screen.getCursorScreenPoint() on native Wayland: Electron returns (0, 0).
   const ozone = app.commandLine.getSwitchValue('ozone-platform');

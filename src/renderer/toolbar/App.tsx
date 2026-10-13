@@ -1405,7 +1405,7 @@ export function ToolbarApp() {
                 <button
                   class={`settings-toggle ${hub().edutictacCursor.enabled ? 'on' : ''}`}
                   disabled={!cursorSupported()}
-                  title={cursorSupported() ? 'Show a highlight around the pointer' : 'Global cursor position is unavailable on native Wayland'}
+                  title={cursorSupported() ? 'Show a highlight around the pointer' : 'On GNOME Wayland, enable Lekhini Pointer Bridge and restart Lekhini'}
                   onClick={() => void window.pen.hub.update({ edutictacCursor: { enabled: !hub().edutictacCursor.enabled } })}
                 >
                   <span>{cursorSupported() ? (hub().edutictacCursor.enabled ? 'On' : 'Off') : 'Unavailable'}</span>
@@ -1461,15 +1461,17 @@ export function ToolbarApp() {
                     }
                     finally { setClickPermissionPending(false); }
                   }}>
-                  <span>{hub().edutictacClicks.enabled ? 'On' : clickPermissionPending() ? 'Check macOS permission…' : 'Off'}</span>
+                  <span>{hub().edutictacClicks.enabled ? 'On' : clickPermissionPending() ? 'Checking…' : 'Off'}</span>
                 </button>
               </div>
               <div class="settings-hint">
                 {clickPermissionGranted()
-                  ? 'Input Monitoring is allowed. Clicks are observed locally and never stored.'
-                  : 'macOS only in this first version. Allow Input Monitoring for Lekhini. For npm run dev, macOS may list it as Electron; add node_modules/electron/dist/Electron.app.'}
+                  ? 'Clicks are observed locally and never stored.'
+                  : isMac()
+                    ? 'Allow Input Monitoring for Lekhini in macOS.'
+                    : 'On GNOME Wayland, enable Lekhini Pointer Bridge version 2, sign out and back in, then restart Lekhini.'}
               </div>
-              <Show when={!clickPermissionGranted()}>
+              <Show when={isMac() && !clickPermissionGranted()}>
                 <div class="settings-row">
                   <span class="settings-row-label">Permission</span>
                   <button class="settings-toggle" onClick={() => void window.pen.clicks.openSettings()}>
@@ -1590,7 +1592,7 @@ export function ToolbarApp() {
                 <button
                   class={`settings-toggle ${hub().edutictacSpotlight.enabled ? 'on' : ''}`}
                   disabled={!cursorSupported()}
-                  title={cursorSupported() ? 'Dim the screen outside the spotlight' : 'Global cursor position is unavailable on native Wayland'}
+                  title={cursorSupported() ? 'Dim the screen outside the spotlight' : 'On GNOME Wayland, enable Lekhini Pointer Bridge and restart Lekhini'}
                   onClick={() => void window.pen.hub.update({
                     edutictacSpotlight: { enabled: !hub().edutictacSpotlight.enabled },
                   })}

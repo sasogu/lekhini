@@ -1,0 +1,7 @@
+{
+  "uuid": "lekhini-pointer@edutictac.es",
+  "name": "Lekhini Pointer Bridge",
+  "description": "Posición y botones del ratón para Lekhini en GNOME Wayland.",
+  "shell-version": ["48"],
+  "version": 2
+}

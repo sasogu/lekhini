@@ -9,9 +9,9 @@ su hub, persistencia y overlays multimonitor.
 
 | Extensión | Estado | Plataformas actuales | Documentación |
 | --- | --- | --- | --- |
-| Cursor Highlight | Implementada | macOS, Windows y X11; desactivada en Wayland nativo | [CURSOR_HIGHLIGHT.md](./CURSOR_HIGHLIGHT.md) |
-| Click Effects | Implementada y probada | macOS; Windows/X11 pendientes | [CLICK_EFFECTS.md](./CLICK_EFFECTS.md) |
-| Spotlight | Implementada; pendiente de validación visual final | macOS, Windows y X11; desactivada en Wayland nativo | [SPOTLIGHT.md](./SPOTLIGHT.md) |
+| Cursor Highlight | Implementada; círculo global confirmado en GNOME | macOS, Windows, X11 y GNOME 48 Wayland con puente | [CURSOR_HIGHLIGHT.md](./CURSOR_HIGHLIGHT.md), [GNOME_WAYLAND.md](./GNOME_WAYLAND.md) |
+| Click Effects | macOS probado; GNOME probado con entrada virtual, pendiente visual | macOS y GNOME 48 Wayland con puente v2; Windows/X11 pendientes | [CLICK_EFFECTS.md](./CLICK_EFFECTS.md), [GNOME_WAYLAND.md](./GNOME_WAYLAND.md) |
+| Spotlight | Implementada; pendiente de validación visual final | macOS, Windows, X11 y GNOME 48 Wayland con puente | [SPOTLIGHT.md](./SPOTLIGHT.md) |
 | Dock de macOS | Implementado | macOS | [MACOS_DEVELOPMENT.md](./MACOS_DEVELOPMENT.md) |
 | Firma estable de desarrollo | Configurada en el Mac de pruebas | macOS | [MACOS_DEVELOPMENT.md](./MACOS_DEVELOPMENT.md) |
 | Magnifier | Implementada y probada | ScreenCaptureKit en macOS; otros proveedores pendientes | [MAGNIFIER.md](./MAGNIFIER.md) |
@@ -21,6 +21,11 @@ su hub, persistencia y overlays multimonitor.
 | Shortcuts configurables | No implementados | Solo existe el bloqueo fijo de Spotlight | — |
 
 ## Arquitectura común
+
+En GNOME Wayland, un helper GJS compartido obtiene la posición global y,
+solo cuando los efectos de clic están activos, los botones mediante una
+extensión de GNOME Shell. No se usan coordenadas parciales de XWayland como
+seguimiento global. Instalación y pruebas en [GNOME_WAYLAND.md](./GNOME_WAYLAND.md).
 
 Las extensiones visuales viven en `src/edutictac/` y reutilizan una
 `BrowserWindow` overlay por monitor. No crean otro sistema de ventanas, estado

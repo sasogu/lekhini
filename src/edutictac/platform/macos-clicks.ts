@@ -1,6 +1,8 @@
 import { ipcMain, screen, app, shell } from 'electron';
 import { getState, onChange, patch } from '../../main/hub';
 import { getOverlays } from '../../main/windows/overlay';
+import { hasGnomeClicks, startGnomeClicks } from './gnome-pointer';
+import type { GnomeClick } from './gnome-pointer';
 
 type ClickEvent = { button: number; x: number; y: number };
 type NativeClickObserver = {
@@ -17,29 +19,49 @@ try {
   console.warn('[EduTicTac] macOS click observer unavailable', error);
 }
 
-function stop(): void { observer?.stop(); }
+let stopGnome: (() => void) | null = null;
+function stop(): void {
+  stopGnome?.();
+  stopGnome = null;
+  observer?.stop();
+}
+
+function publish(click: GnomeClick): void {
+  const display = screen.getDisplayNearestPoint(click);
+  const overlay = getOverlays().get(display.id);
+  if (!overlay || overlay.isDestroyed()) return;
+  overlay.webContents.send('edutictac:click', {
+    button: click.button,
+    x: click.x - display.bounds.x,
+    y: click.y - display.bounds.y,
+    id: `${Date.now()}-${Math.random()}`,
+  });
+}
 
 function sync(): void {
+  if (hasGnomeClicks() && getState().edutictacClicks.enabled) {
+    if (!stopGnome) stopGnome = startGnomeClicks(publish, () => {
+      stopGnome = null;
+      patch({ edutictacClicks: { enabled: false } });
+    });
+    return;
+  }
   if (!observer || process.platform !== 'darwin' || !getState().edutictacClicks.enabled || !observer.hasPermission()) {
     stop();
     return;
   }
   if (!observer.start(({ button, x, y }) => {
-    const display = screen.getDisplayNearestPoint({ x, y });
-    const overlay = getOverlays().get(display.id);
-    if (!overlay || overlay.isDestroyed()) return;
-    overlay.webContents.send('edutictac:click', {
-      button: button === 0 ? 'left' : button === 1 ? 'right' : 'middle',
-      x: x - display.bounds.x,
-      y: y - display.bounds.y,
-      id: `${Date.now()}-${Math.random()}`,
-    });
+    publish({ button: button === 0 ? 'left' : button === 1 ? 'right' : 'middle', x, y });
   })) console.warn('[EduTicTac] macOS click listener could not be started');
 }
 
 export function registerMacClickObserver(): void {
-  ipcMain.handle('edutictac:clicks:status', () => !!observer && process.platform === 'darwin' && observer.hasPermission());
+  ipcMain.handle('edutictac:clicks:status', () => hasGnomeClicks() || (!!observer && process.platform === 'darwin' && observer.hasPermission()));
   ipcMain.handle('edutictac:clicks:request', () => {
+    if (hasGnomeClicks()) {
+      patch({ edutictacClicks: { enabled: true } });
+      return true;
+    }
     if (!observer || process.platform !== 'darwin') return false;
     if (!observer.hasPermission()) observer.requestPermission();
     const granted = observer.hasPermission();
