@@ -123,6 +123,7 @@ app.whenReady().then(async () => {
     if (changed.has('orientation')) {
       resizeToolbar(state.orientation, state.minimized, dock, 'default');
     } else if (
+      changed.has('classroomMode') ||
       changed.has('minimized') ||
       changed.has('settingsOpen') ||
       changed.has('statusPanelOpen') ||

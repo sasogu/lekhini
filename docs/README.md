@@ -17,3 +17,5 @@
 La referencia funcional actual es la rama `feature/architecture-audit`. Cada
 fase debe actualizar este índice y el inventario antes de considerarse
 terminada.
+
+- [Aula táctil](CLASSROOM_MODE.md): barra con controles grandes y herramientas directas.

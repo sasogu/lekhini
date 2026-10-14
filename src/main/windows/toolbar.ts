@@ -1,7 +1,7 @@
 import { BrowserWindow, app, ipcMain, screen } from 'electron';
 import path from 'node:path';
-import { SETTINGS_EXTRA, TOOLBAR_SIZES } from '../../shared/constants';
-import { subscribe } from '../hub';
+import { CLASSROOM_TOOLBAR_SIZES, SETTINGS_EXTRA, TOOLBAR_SIZES } from '../../shared/constants';
+import { getState, subscribe } from '../hub';
 import type { Orientation } from '../../shared/types';
 import { registerControlWindow } from '../../edutictac/platform/control-window-visibility';
 
@@ -41,7 +41,7 @@ export type DockKind = 'none' | 'panel';
 
 export function sizeFor(orientation: Orientation, minimized: boolean, dock: DockKind) {
   if (minimized) return MIN_SIZE;
-  const base = TOOLBAR_SIZES[orientation];
+  const base = (getState().classroomMode ? CLASSROOM_TOOLBAR_SIZES : TOOLBAR_SIZES)[orientation];
   if (dock === 'none') return { w: base.w, h: base.h };
   const extra = SETTINGS_EXTRA[orientation];
   return { w: base.w + extra.w, h: base.h + extra.h };

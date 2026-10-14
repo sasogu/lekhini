@@ -11,6 +11,7 @@ import type {
 } from '../shared/types';
 
 export interface PersistedState {
+  classroomMode: boolean;
   edutictacDisplayLinkCompatibility: boolean;
   edutictacCursor: { enabled: boolean; color: string; size: number; opacity: number; shape: 'ring' | 'dot' };
   edutictacClicks: { enabled: boolean; color: string; size: number; duration: number; opacity: number; showButton: boolean };
@@ -99,6 +100,7 @@ export interface PersistedState {
 }
 
 export const PERSISTED_DEFAULTS: PersistedState = {
+  classroomMode: false,
   edutictacDisplayLinkCompatibility: false,
   edutictacCursor: { enabled: false, color: '#ff3b30', size: 44, opacity: 0.85, shape: 'ring' },
   edutictacClicks: { enabled: false, color: '#ff3b30', size: 68, duration: 520, opacity: 0.8, showButton: false },

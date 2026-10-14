@@ -1360,3 +1360,24 @@ html, body {
   background: rgba(231, 76, 60, 0.10);
   filter: none;
 }
+
+/* Aula táctil: herramientas directas, con texto y objetivos de al menos 56px. */
+.bar[data-classroom='true'][data-orient='v'] .bar-main { width: 176px; }
+.bar[data-classroom='true'][data-orient='h'] .bar-row { height: auto; align-items: stretch; }
+.bar[data-classroom='true'] .scroll-area { align-items: stretch; }
+.classroom-controls { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; width: 100%; }
+.bar[data-orient='h'] .classroom-controls { grid-template-columns: repeat(7, 84px); width: max-content; }
+.classroom-status { grid-column: 1 / -1; margin: 0; padding: 6px; text-align: center; font-size: 12px; font-weight: 700; }
+.classroom-btn { -webkit-app-region: no-drag; appearance: none; border: 1px solid var(--separator); background: var(--bg); color: var(--text); border-radius: 10px; min-width: 56px; min-height: 60px; padding: 6px 3px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 5px; font: inherit; font-size: 11px; cursor: pointer; touch-action: manipulation; }
+.classroom-btn svg { width: 24px; height: 24px; }
+.classroom-btn:hover { background: var(--hover); }
+.classroom-btn.active { background: var(--accent); color: var(--on-accent); }
+.classroom-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: -3px; }
+.classroom-color { width: 24px; height: 24px; border-radius: 50%; border: 1px solid var(--separator); }
+.bar[data-classroom='true'] .bar-end .winctl { min-width: 48px; min-height: 48px; }
+.bar[data-classroom='true'] .winctls .winctl { min-width: 44px; min-height: 44px; }
+
+.flyout-window[data-classroom='true'] .swatch,
+.flyout-window[data-classroom='true'] .hex-pick { width: 44px; height: 44px; }
+.flyout-window[data-classroom='true'] .cf-swatches { grid-template-columns: repeat(4, 44px); }
+.flyout-window[data-classroom='true'] .thickness-chip { min-width: 44px; min-height: 44px; }

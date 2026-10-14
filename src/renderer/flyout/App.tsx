@@ -14,6 +14,7 @@ import { TOOL_BY_ID, toolHint } from '../toolbar/toolDefs';
 
 // The slice of hub state this window cares about.
 interface Snapshot {
+  classroomMode: boolean;
   flyout: FlyoutId | null;
   activeTool: ToolId;
   settings: ToolSettings;
@@ -54,6 +55,7 @@ export function FlyoutWindowApp() {
     const s = hub();
     if (!s || s.flyout === null) return;
     // Track everything that can change the card's size.
+    void s.classroomMode;
     void s.profile;
     void s.activeTool;
     if (!cardEl) return;
@@ -73,7 +75,7 @@ export function FlyoutWindowApp() {
       {(fid) => {
         const s = hub()!;
         return (
-          <div class="bar flyout-window" data-theme={s.theme}>
+          <div class="bar flyout-window" data-theme={s.theme} data-classroom={hub()!.classroomMode ? 'true' : 'false'}>
             <div
               ref={cardEl}
               class="flyout-card is-window"

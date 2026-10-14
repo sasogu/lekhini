@@ -107,3 +107,48 @@ press(false);await sleep(150);
 assert.equal(await hasInk(),false,'Cleared stroke came back on mouse release');
 console.log('Clear all during an unfinished stroke: PASS');
 
+
+await patch({classroomMode:true,orientation:'v',drawMode:false,activeTool:'pen'});
+await sleep(500);
+assert.equal(await evaluate(toolbar,"!!document.querySelector('.classroom-controls')"),true);
+assert.equal(await evaluate(toolbar,"[...document.querySelectorAll('.classroom-btn')].every(b=>b.getBoundingClientRect().width>=56 && b.getBoundingClientRect().height>=56)"),true,'Touch targets too small');
+await clickControl(toolbar,'[data-tool="pen"]');
+assert.equal(await evaluate(toolbar,'window.pen.hub.get().then(s=>s.drawMode)'),true);
+move(400,300);press(true);move(450,320);await sleep(100);press(false);await sleep(100);
+assert.equal(await hasInk(),true);
+await clickControl(toolbar,'[data-action="clear"]');
+assert.equal(await hasInk(),true,'First tap erased without confirmation');
+await clickControl(toolbar,'[data-action="clear"]');
+assert.equal(await hasInk(),false,'Confirmed classroom clear failed');
+await clickControl(toolbar,'[aria-label="Color y grosor"]');
+await sleep(300);
+assert.equal(await evaluate(flyout,"[...document.querySelectorAll('.swatch')].every(b=>b.getBoundingClientRect().width>=44 && b.getBoundingClientRect().height>=44)"),true,'Palette touch targets too small');
+await clickControl(flyout,'.swatch:nth-child(3)');
+await clickControl(toolbar,'[data-action="desktop"]');
+assert.equal(await evaluate(toolbar,'window.pen.hub.get().then(s=>s.drawMode)'),false);
+await clickControl(toolbar,'[data-action="board"]');
+assert.equal(await evaluate(toolbar,'window.pen.hub.get().then(s=>s.whiteboard)'), 'white');
+await clickControl(toolbar,'[data-action="desktop"]');
+assert.equal(await evaluate(toolbar,'window.pen.hub.get().then(s=>s.whiteboard)'), 'off','Desktop button left whiteboard covering the desktop');
+await clickControl(toolbar,'[data-action="board"]');
+
+await clickControl(toolbar,'[data-action="board"]');
+assert.equal(await evaluate(toolbar,'window.pen.hub.get().then(s=>s.whiteboard)'), 'black');
+await clickControl(toolbar,'[data-action="board"]');
+assert.equal(await evaluate(toolbar,'window.pen.hub.get().then(s=>s.whiteboard)'), 'off');
+await patch({orientation:'h'});
+assert.equal(await evaluate(toolbar,"[...document.querySelectorAll('.classroom-btn')].every(b=>{const r=b.getBoundingClientRect();const s=document.querySelector('.scroll-area').getBoundingClientRect();return r.y>=0&&r.bottom<=innerHeight&&r.x>=s.x&&r.right<=s.right})"),true,'Horizontal classroom buttons clipped');
+// Save only the isolated toolbar, never any real desktop content.
+const ws=new WebSocket(toolbar.webSocketDebuggerUrl);await new Promise(r=>ws.onopen=r);
+const shot=new Promise(r=>ws.onmessage=e=>r(JSON.parse(e.data)));
+ws.send(JSON.stringify({id:2,method:'Page.captureScreenshot',params:{format:'png'}}));
+const screenshot=await shot;ws.close();
+const {writeFileSync}=await import('node:fs');writeFileSync('/tmp/lekhini-aula-toolbar.png',Buffer.from(screenshot.result.data,'base64'));
+await clickControl(toolbar,'[aria-label="Volver a la barra normal"]');
+assert.equal(await evaluate(toolbar,'window.pen.hub.get().then(s=>s.classroomMode)'),false);
+assert.equal(await evaluate(toolbar,"!!document.querySelector('.eye-btn')"),true);
+await patch({classroomMode:true});
+const {readFileSync}=await import('node:fs');
+const {join}=await import('node:path');
+assert.equal(JSON.parse(readFileSync(join(process.env.XDG_CONFIG_HOME,'Lekhini','config.json'),'utf8')).classroomMode,true,'Classroom preference not persisted');
+console.log('Classroom mode: native tools, safe clear, desktop, board, touch palette, both layouts and exit PASS');

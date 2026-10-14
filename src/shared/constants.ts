@@ -74,6 +74,11 @@ export const TOOLBAR_SIZES = {
   v: { w: 64, h: 680 },
 };
 
+export const CLASSROOM_TOOLBAR_SIZES = {
+  h: { w: 820, h: 260 },
+  v: { w: 176, h: 680 },
+};
+
 // Extra space added when the settings dropdown is open.
 // Horizontal grows downward; vertical grows sideways.
 export const SETTINGS_EXTRA = {

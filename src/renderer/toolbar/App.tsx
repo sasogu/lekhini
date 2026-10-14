@@ -33,6 +33,7 @@ import type {
 import { Icons, Logo } from './icons';
 import { ChatPanel } from './ChatPanel';
 import { ToolButton } from './ToolButton';
+import { ClassroomControls } from './ClassroomControls';
 import { GroupButton } from './GroupButton';
 import { TOOL_BY_ID, toolHint } from './toolDefs';
 
@@ -104,6 +105,7 @@ const DEFAULT_MODEL: Record<CloudProviderId, string> = {
 type PanelKind = 'permission' | 'error';
 
 interface HubSnapshot {
+  classroomMode: boolean;
   edutictacCursor: { enabled: boolean; color: string; size: number; opacity: number; shape: 'ring' | 'dot' };
   edutictacClicks: { enabled: boolean; color: string; size: number; duration: number; opacity: number; showButton: boolean };
   edutictacSpotlight: {
@@ -235,6 +237,7 @@ export function ToolbarApp() {
   const [keyPermissionPending, setKeyPermissionPending] = createSignal(false);
   const [keyPermissionGranted, setKeyPermissionGranted] = createSignal(false);
   const [hub, setHub] = createSignal<HubSnapshot>({
+    classroomMode: false,
     edutictacCursor: { enabled: false, color: '#ff3b30', size: 44, opacity: 0.85, shape: 'ring' },
     edutictacClicks: { enabled: false, color: '#ff3b30', size: 68, duration: 520, opacity: 0.8, showButton: false },
     edutictacSpotlight: { enabled: false, shape: 'circle', width: 280, height: 280, feather: 28, dimOpacity: 0.62, locked: false },
@@ -654,6 +657,9 @@ export function ToolbarApp() {
             ? el.scrollWidth
             : el.offsetWidth;
         }
+        const layout = getComputedStyle(row);
+        barMainWidth += parseFloat(layout.paddingLeft) + parseFloat(layout.paddingRight)
+          + Math.max(0, row.children.length - 1) * (parseFloat(layout.columnGap) || 0);
       }
     }
     for (const child of Array.from(barMainRef.children)) {
@@ -700,6 +706,7 @@ export function ToolbarApp() {
   createEffect(() => {
     const s = hub();
     // Reading these fields explicitly tracks them.
+    void s.classroomMode;
     void s.orientation;
     void s.minimized;
     void s.settingsOpen;
@@ -1029,6 +1036,7 @@ export function ToolbarApp() {
   return (
     <div
       class="bar"
+      data-classroom={hub().classroomMode ? 'true' : 'false'}
       data-orient={hub().orientation}
       data-min={hub().minimized ? 'true' : 'false'}
       data-platform={isMac() ? 'mac' : 'win'}
@@ -1097,6 +1105,11 @@ export function ToolbarApp() {
 
             {/* ─── TOOLS · ACTIONS · COLOR ─── */}
             <div class="scroll-area" ref={scrollRef}>
+              <Show when={!hub().classroomMode} fallback={
+                <ClassroomControls state={hub()} cycleBoard={cycleBoard}
+                  paletteRef={(el) => (anchorEls.color = el)}
+                  openPalette={() => toggleFlyout('color')} />
+              }>
               {/* Eye — master draw-mode toggle (Epic Pen style). */}
               <ToolButton
                 class="eye-btn"
@@ -1214,7 +1227,8 @@ export function ToolbarApp() {
                     )}
                   </For>
                 </div>
-              </div>
+              </div>              </Show>
+
             </div>
 
             {/* ─── SETTINGS ─── quiet gear pinned at the end. */}
@@ -1254,6 +1268,20 @@ export function ToolbarApp() {
                 title="Close settings"
                 aria-label="Close settings"
               >{Icons.close()}</button>
+            </div>
+
+            <div class="settings-section">
+              <div class="settings-section-label">EduTicTac / Aula</div>
+              <div class="settings-row">
+                <span class="settings-row-label">Aula táctil</span>
+                <button class={`settings-toggle ${hub().classroomMode ? 'on' : ''}`}
+                  aria-pressed={hub().classroomMode}
+                  onClick={() => void window.pen.hub.update({ classroomMode: !hub().classroomMode })}>
+                  <span>{hub().classroomMode ? 'Activada' : 'Activar'}</span>
+                </button>
+              </div>
+              <p class="ai-disclosure">Botones grandes y herramientas directas para usar la pantalla sin teclado.</p>
+
             </div>
 
             {/* ── First-run setup wizard ── */}
@@ -1730,6 +1758,7 @@ export function ToolbarApp() {
 
             <div class="settings-section">
               <div class="settings-section-label">Appearance</div>
+
               <div class="settings-row">
                 <span class="settings-row-label">Theme</span>
                 <button class="settings-toggle" onClick={toggleTheme}>

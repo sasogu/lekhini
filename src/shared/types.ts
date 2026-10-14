@@ -146,6 +146,7 @@ export interface PerToolWidth {
 export type Orientation = 'h' | 'v';
 
 export type HubStateUpdate = {
+  classroomMode?: boolean;
   edutictacCursor?: Partial<{ enabled: boolean; color: string; size: number; opacity: number; shape: 'ring' | 'dot' }>;
   edutictacClicks?: Partial<{ enabled: boolean; color: string; size: number; duration: number; opacity: number; showButton: boolean }>;
   edutictacSpotlight?: Partial<{

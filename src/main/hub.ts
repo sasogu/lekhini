@@ -20,6 +20,7 @@ import type {
 } from '../shared/types';
 
 export interface HubState {
+  classroomMode: boolean;
   edutictacCursor: { enabled: boolean; color: string; size: number; opacity: number; shape: 'ring' | 'dot' };
   edutictacClicks: { enabled: boolean; color: string; size: number; duration: number; opacity: number; showButton: boolean };
   edutictacSpotlight: {
@@ -107,6 +108,7 @@ export interface HubState {
 }
 
 const state: HubState = {
+  classroomMode: false,
   edutictacCursor: { ...PERSISTED_DEFAULTS.edutictacCursor },
   edutictacClicks: { ...PERSISTED_DEFAULTS.edutictacClicks },
   edutictacSpotlight: { ...PERSISTED_DEFAULTS.edutictacSpotlight, locked: false },
@@ -293,6 +295,7 @@ export function hydrateFromPersistence(): void {
     magnifier: teacher?.magnifier === true,
     annotations: teacher?.annotations !== false,
   };
+  state.classroomMode = p.classroomMode === true;
   state.orientation = p.orientation;
   state.theme = p.theme;
   state.profile = p.profile;
@@ -369,6 +372,14 @@ export function hydrateFromPersistence(): void {
 
 export function patch(update: HubStateUpdate) {
   const changed = new Set<keyof HubState>();
+
+  if (typeof update.classroomMode === 'boolean' && update.classroomMode !== state.classroomMode) {
+    state.classroomMode = update.classroomMode;
+    changed.add('classroomMode');
+    save('classroomMode', state.classroomMode);
+    state.flyout = null;
+    changed.add('flyout');
+  }
 
   if (update.edutictacCursor) {
     const next = { ...state.edutictacCursor, ...update.edutictacCursor };
