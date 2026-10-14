@@ -18,6 +18,8 @@ declare global {
   interface Window {
     pen: {
       cursor: {
+        native(): Promise<boolean>;
+        onNative(cb: (active: boolean) => void): () => void;
         supported(): Promise<boolean>;
         onPosition(cb: (point: { x: number; y: number } | null) => void): () => void;
       };

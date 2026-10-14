@@ -374,6 +374,7 @@ export type IpcChannel =
   | 'hub:state:broadcast'
   | 'edutictac:cursor-position'
   | 'edutictac:cursor-supported'
+  | 'edutictac:cursor-native'
   | 'edutictac:clicks:request'
   | 'edutictac:clicks:status'
   | 'edutictac:clicks:open-settings'

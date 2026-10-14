@@ -10,6 +10,7 @@ fi
 lekhini_extension_source="${1:-$lekhini_extension_source}"
 test -f "$lekhini_extension_source/metadata.json"
 test -f "$lekhini_extension_source/zoom-lease.mjs"
+test -f "$lekhini_extension_source/cursor-highlight.js"
 
 lekhini_extension_target="${XDG_DATA_HOME:-$HOME/.local/share}/gnome-shell/extensions/lekhini-pointer@edutictac.es"
 mkdir -p "$lekhini_extension_target"
@@ -28,6 +29,6 @@ uuid = 'lekhini-pointer@edutictac.es'
 if uuid not in extensions:
     extensions.append(uuid)
     subprocess.run(['gsettings', 'set', schema, 'enabled-extensions', repr(extensions)], check=True)
-print('Puente GNOME v3 instalado; extensiones existentes conservadas.')
+print('Puente GNOME v4 instalado; extensiones existentes conservadas.')
 print('Guarda el trabajo, cierra sesión y vuelve a entrar para cargar la actualización.')
 PY

@@ -7,7 +7,8 @@ que el círculo seguía al ratón sobre Lekhini y dejaba de actualizarse al sali
 de la aplicación, incluso en la misma pantalla.
 
 La extensión **Lekhini Pointer Bridge** proporciona la posición lógica del
-ratón desde GNOME Shell. Lekhini conserva sus overlays y envía el círculo al
+ratón desde GNOME Shell. Desde la versión 4, el círculo se dibuja directamente
+en el compositor; las versiones anteriores usan el overlay de Lekhini en el
 monitor correspondiente. El puente no lee teclas, no captura pantallas y no
 conserva un historial; devuelve una posición solo cuando un cliente la pide.
 En la pantalla bloqueada no proporciona coordenadas.
@@ -65,6 +66,43 @@ de Lekhini en el monitor correspondiente. Una pulsación mantenida no produce
 repeticiones. Al iniciar con un botón ya pulsado o reanudar después del bloqueo
 no se inventa un clic. Como se consulta estado, una pulsación completa de menos
 de 8 ms puede quedar entre dos muestras y no producir un efecto.
+
+## Círculo nativo sin consulta periódica (versión 4)
+
+El círculo anterior recorría GNOME → D-Bus → GJS → Electron → renderer →
+compositor. Consultar cada 8 ms reducía parte del retraso, pero mantenía las
+colas y el refresco adicional de la ventana Electron.
+
+El puente v4 dibuja un actor no interactivo en GNOME Shell y actualiza su
+posición con `Meta.CursorTracker::position-invalidated`, leyendo la posición
+actual del puntero. No usa temporizadores, interpolación ni animación para
+el círculo. Conserva color, tamaño, opacidad y forma (anillo o punto), y sigue
+las coordenadas lógicas del escritorio al cambiar de monitor.
+La [implementación de Mutter 48.7](https://raw.githubusercontent.com/GNOME/mutter/48.7/src/backends/meta-cursor-tracker.c)
+documenta la señal y la consulta del estado actual del puntero.
+
+La aplicación envía únicamente cambios de configuración a través de un
+cliente D-Bus persistente. Tras confirmar la activación nativa oculta el
+círculo Electron y deja de consultar posiciones si ninguna otra ayuda las
+necesita. Spotlight, clics y atajos conservan su seguimiento independiente.
+Si falla el círculo nativo, se recupera el overlay anterior; las extensiones
+v1–v3 siguen siendo compatibles.
+
+La sesión nativa pertenece a un solo cliente, desaparece al recibir EOF o
+perder ese cliente, y se limpia al desactivar la extensión. El actor se
+oculta durante el bloqueo y vuelve a mostrarse al desbloquear. No captura
+clics ni cambia el puntero del sistema.
+
+Se elimina el retraso de la consulta periódica y del renderer Electron;
+el refresco del monitor y la ruta de cursor hardware de GNOME todavía
+pueden producir diferencia de un fotograma. No se garantiza latencia cero.
+La compartición de pantalla debe volver a comprobarse con este actor nativo.
+
+Instalar el directorio completo con `install-gnome-bridge.sh`, cerrar sesión
+y volver a entrar para cargar v4, y reabrir Lekhini. Las pruebas aisladas
+verifican movimiento del actor, cambio de ajustes, exclusividad, limpieza
+tras EOF/crash y ausencia de un círculo Electron duplicado, además de la
+recuperación del overlay al perder el cliente nativo.
 
 GNOME 48 nativo intercambia los bits de los botones central y derecho en su
 [`maskmap`](https://raw.githubusercontent.com/GNOME/mutter/gnome-48/src/backends/native/meta-seat-impl.c).

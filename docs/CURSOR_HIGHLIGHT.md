@@ -2,6 +2,12 @@
 
 ## Resultado de viabilidad
 
+**Actualización GNOME, 2026-10-14:** el puente v4 dibuja el círculo dentro del
+compositor y sigue `position-invalidated`, sin temporizador ni recorrido de
+posición por Electron. El overlay anterior se conserva para otros sistemas
+y como recuperación. Requiere cargar la extensión v4 tras cerrar y volver
+a entrar en la sesión; véase [círculo nativo GNOME](./GNOME_WAYLAND.md#círculo-nativo-sin-consulta-periódica-versión-4).
+
 **Actualización Linux, 2026-10-13:** XWayland en una sesión Wayland no basta
 para consultar el ratón sobre aplicaciones nativas. En GNOME 48 se utiliza
 ahora [Lekhini Pointer Bridge](./GNOME_WAYLAND.md); sin el puente, se desactiva

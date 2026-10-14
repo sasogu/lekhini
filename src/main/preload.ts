@@ -17,6 +17,8 @@ import type {
 
 const api = {
   cursor: {
+    native: () => ipcRenderer.invoke('edutictac:cursor-native' satisfies IpcChannel) as Promise<boolean>,
+    onNative: (cb: (active: boolean) => void) => bind('edutictac:cursor-native', cb as (v: unknown) => void),
     supported: () => ipcRenderer.invoke('edutictac:cursor-supported' satisfies IpcChannel) as Promise<boolean>,
     onPosition: (cb: (point: { x: number; y: number } | null) => void) =>
       bind('edutictac:cursor-position', cb as (v: unknown) => void),

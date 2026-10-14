@@ -9,6 +9,7 @@ type Subscription<T> = { publish: (event: T) => void; unavailable: () => void };
 let available = false;
 let clicksAvailable = false;
 let magnifierAvailable = false;
+let cursorHighlightAvailable = false;
 const pointers = new Set<Subscription<Point | null>>();
 const clicks = new Set<Subscription<GnomeClick>>();
 let stopHelper: (() => void) | null = null;
@@ -20,6 +21,7 @@ export function usesWaylandSession(): boolean {
 export function hasGnomePointer(): boolean { return available; }
 export function hasGnomeClicks(): boolean { return clicksAvailable; }
 export function hasGnomeMagnifier(): boolean { return magnifierAvailable; }
+export function hasGnomeCursorHighlight(): boolean { return cursorHighlightAvailable; }
 
 async function probe(method: string): Promise<boolean> {
   return new Promise<boolean>((resolve) => {
@@ -36,6 +38,7 @@ export async function probeGnomePointer(): Promise<void> {
   // Version 1 still supports the cursor until the user reloads GNOME.
   clicksAvailable = available && await probe('GetState');
   magnifierAvailable = available && await probe('GetMagnifierStatus');
+  cursorHighlightAvailable = available && await probe('GetCursorHighlightStatus');
 }
 
 function isPoint(value: unknown): value is Point {

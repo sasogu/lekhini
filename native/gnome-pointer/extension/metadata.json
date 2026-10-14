@@ -1,7 +1,7 @@
 {
   "uuid": "lekhini-pointer@edutictac.es",
   "name": "Lekhini Pointer Bridge",
-  "description": "Ratón y zoom del escritorio para Lekhini en GNOME Wayland.",
+  "description": "Círculo nativo, ratón y zoom del escritorio para Lekhini en GNOME Wayland.",
   "shell-version": ["48"],
-  "version": 3
+  "version": 4
 }

@@ -31,6 +31,8 @@ with tempfile.TemporaryDirectory(prefix="lekhini-click-test-") as directory:
       <method name="TestButton"><arg type="u" direction="in"/><arg type="b" direction="in"/></method>
       <method name="TestMove"><arg type="i" direction="in"/><arg type="i" direction="in"/></method>
       <method name="TestMagnifierView"><arg type="b" direction="out"/><arg type="d" direction="out"/></method>
+      <method name="TestCursorView"><arg type="b" direction="out"/><arg type="d" direction="out"/><arg type="d" direction="out"/><arg type="d" direction="out"/><arg type="b" direction="out"/></method>
+      <method name="TestCursorDrop"/>
     </interface></node>''')
     code = code.replace("            GetState() {", """            TestButton(button, pressed) {
                 testDevice ??= Clutter.get_default_backend().get_default_seat()
@@ -46,6 +48,11 @@ with tempfile.TemporaryDirectory(prefix="lekhini-click-test-") as directory:
             TestMagnifierView() {
                 return [Main.magnifier.isActive(), Main.magnifier.getZoomRegions()[0].getMagFactor()[0]];
             },
+            TestCursorView() {
+                const actor = extension._highlight.actor;
+                return [!!extension._highlight.owner, actor?.x ?? 0, actor?.y ?? 0, actor?.width ?? 0, actor?.visible ?? false];
+            },
+            TestCursorDrop() { extension._highlight.stop(); },
             GetState() {""")
     (extension / "extension.js").write_text(code)
     env = {**os.environ, "XDG_RUNTIME_DIR": str(runtime), "XDG_DATA_HOME": str(data),
@@ -64,6 +71,7 @@ with tempfile.TemporaryDirectory(prefix="lekhini-click-test-") as directory:
                                  env=env, stdout=log, stderr=log)
         helper = None
         zoom_helper = None
+        cursor_helper = None
         application = None
         try:
             for _ in range(40):
@@ -87,6 +95,45 @@ with tempfile.TemporaryDirectory(prefix="lekhini-click-test-") as directory:
                 result = call("es.edutictac.Lekhini.Pointer.TestButton", str(button), "false")
                 assert result.returncode == 0, result.stderr
                 time.sleep(.05)
+            cursor_helper = subprocess.Popen(["gjs", "-m", str(source / "cursor-client.js")],
+                                             env=env, stdin=subprocess.PIPE, stdout=subprocess.PIPE,
+                                             stderr=subprocess.PIPE, text=True)
+
+            def highlight(size=44, shape='ring'):
+                cursor_helper.stdin.write(json.dumps({"enabled": True, "color": "#ff3b30",
+                    "size": size, "opacity": .85, "shape": shape}) + "\n")
+                cursor_helper.stdin.flush()
+                assert select.select([cursor_helper.stdout], [], [], 5)[0], "No cursor acknowledgement"
+                reply = cursor_helper.stdout.readline().strip()
+                assert reply == "applied", (reply, cursor_helper.poll(), cursor_helper.stderr.read() if cursor_helper.poll() is not None else '')
+
+            highlight()
+            call("es.edutictac.Lekhini.Pointer.TestMove", "500", "600")
+            time.sleep(.1)
+            assert call("es.edutictac.Lekhini.Pointer.TestCursorView").stdout.strip() == "(true, 478.0, 578.0, 44.0, true)"
+            # Neither a second client nor malformed settings may remove the owner's circle.
+            assert call("es.edutictac.Lekhini.Pointer.SetCursorHighlight", "true", "#ff3b30", "44.0", "0.85", "ring").returncode != 0
+            assert call("es.edutictac.Lekhini.Pointer.GetCursorHighlightStatus").stdout.strip() == "(true,)"
+            highlight(60, 'dot')
+            assert call("es.edutictac.Lekhini.Pointer.TestCursorView").stdout.strip() == "(true, 470.0, 570.0, 60.0, true)"
+            cursor_helper.stdin.close()
+            cursor_helper.wait(timeout=5)
+            for _ in range(20):
+                if call("es.edutictac.Lekhini.Pointer.GetCursorHighlightStatus").stdout.strip() == "(false,)": break
+                time.sleep(.1)
+            final_cursor = call("es.edutictac.Lekhini.Pointer.GetCursorHighlightStatus")
+            assert final_cursor.stdout.strip() == "(false,)", (final_cursor.stdout, final_cursor.stderr)
+            cursor_helper = subprocess.Popen(["gjs", "-m", str(source / "cursor-client.js")],
+                                             env=env, stdin=subprocess.PIPE, stdout=subprocess.PIPE,
+                                             stderr=subprocess.PIPE, text=True)
+            highlight()
+            cursor_helper.kill()
+            cursor_helper.wait(timeout=5)
+            for _ in range(20):
+                if call("es.edutictac.Lekhini.Pointer.GetCursorHighlightStatus").stdout.strip() == "(false,)": break
+                time.sleep(.1)
+            assert call("es.edutictac.Lekhini.Pointer.GetCursorHighlightStatus").stdout.strip() == "(false,)"
+            print("Native cursor follows compositor motion, settings, ownership, EOF and crash cleanup: PASS", flush=True)
             original_zoom = call("es.edutictac.Lekhini.Pointer.GetMagnifierStatus").stdout.strip()
             zoom_helper = subprocess.Popen(["gjs", "-m", str(source / "magnifier-client.js")],
                                            env=env, stdin=subprocess.PIPE, stdout=subprocess.PIPE,
@@ -162,6 +209,9 @@ with tempfile.TemporaryDirectory(prefix="lekhini-click-test-") as directory:
                             if "lekhini" in line.lower() or "JS ERROR" in line), flush=True)
             raise
         finally:
+            if cursor_helper and cursor_helper.poll() is None:
+                cursor_helper.terminate()
+                cursor_helper.wait(timeout=5)
             if application and application.poll() is None:
                 application.terminate()
                 application.wait(timeout=5)

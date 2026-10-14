@@ -38,6 +38,22 @@ const nativeView = () => execFileSync('gdbus', ['call', '--session', '--dest', '
     '--object-path', '/es/edutictac/Lekhini/Pointer', '--method', 'es.edutictac.Lekhini.Pointer.TestMagnifierView'], {encoding: 'utf8'}).trim();
 const spot = () => evaluate(overlay, `(()=>{const e=document.querySelector('.edutictac-spotlight ellipse');return e?{x:+e.getAttribute('cx'),y:+e.getAttribute('cy'),rx:+e.getAttribute('rx'),ry:+e.getAttribute('ry')}:null})()`);
 
+await patch({edutictacCursor: {enabled: true, size: 44, shape: 'ring'}});
+assert.equal(await evaluate(toolbar, 'window.pen.cursor.native()'), true);
+move(500, 600);
+await sleep(100);
+assert.equal(await evaluate(overlay, "!!document.querySelector('.edutictac-cursor')"), false);
+assert.equal(execFileSync('gdbus', ['call', '--session', '--dest', 'org.gnome.Shell',
+    '--object-path', '/es/edutictac/Lekhini/Pointer', '--method', 'es.edutictac.Lekhini.Pointer.TestCursorView'], {encoding: 'utf8'}).trim(), '(true, 478.0, 578.0, 44.0, true)');
+execFileSync('gdbus', ['call', '--session', '--dest', 'org.gnome.Shell',
+    '--object-path', '/es/edutictac/Lekhini/Pointer', '--method', 'es.edutictac.Lekhini.Pointer.TestCursorDrop']);
+await sleep(200);
+assert.equal(await evaluate(toolbar, 'window.pen.cursor.native()'), false);
+assert.equal(await evaluate(overlay, "!!document.querySelector('.edutictac-cursor')"), true);
+await patch({edutictacCursor: {enabled: false}});
+assert.equal(await evaluate(toolbar, 'window.pen.cursor.native()'), false);
+console.log('Electron delegates to GNOME without a duplicate circle and falls back on native loss: PASS');
+
 await patch({autoUpdate: false, edutictacCursor: {enabled: false}, edutictacClicks: {enabled: false}, edutictacSpotlight: {enabled: true, shape: 'ellipse', width: 400, height: 200, locked: false}});
 move(300, 400);
 await sleep(200);

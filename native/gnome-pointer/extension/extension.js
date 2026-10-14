@@ -4,6 +4,7 @@ import Clutter from 'gi://Clutter';
 import {Extension} from 'resource:///org/gnome/shell/extensions/extension.js';
 import * as Main from 'resource:///org/gnome/shell/ui/main.js';
 import {ZoomLease} from './zoom-lease.mjs';
+import {CursorHighlight} from './cursor-highlight.js';
 
 const XML = `<node><interface name="es.edutictac.Lekhini.Pointer">
   <method name="GetPosition">
@@ -26,6 +27,15 @@ const XML = `<node><interface name="es.edutictac.Lekhini.Pointer">
     <arg name="zoom" type="d" direction="in"/>
   </method>
   <signal name="MagnifierStopped"/>
+  <method name="GetCursorHighlightStatus"><arg name="active" type="b" direction="out"/></method>
+  <method name="SetCursorHighlight">
+    <arg name="enabled" type="b" direction="in"/>
+    <arg name="color" type="s" direction="in"/>
+    <arg name="size" type="d" direction="in"/>
+    <arg name="opacity" type="d" direction="in"/>
+    <arg name="shape" type="s" direction="in"/>
+  </method>
+  <signal name="CursorHighlightStopped"/>
 </interface></node>`;
 
 export default class LekhiniPointer extends Extension {
@@ -39,7 +49,19 @@ export default class LekhiniPointer extends Extension {
             set zoom(value) { magnifier.set_double('mag-factor', value); },
         });
         const extension = this;
+        this._highlight = new CursorHighlight(() => this._service?.emit_signal('CursorHighlightStopped', null));
         this._service = Gio.DBusExportedObject.wrapJSObject(XML, {
+            GetCursorHighlightStatus() { return !!extension._highlight.owner; },
+            SetCursorHighlightAsync(settings, invocation) {
+                try {
+                    extension._highlight.update(invocation.get_sender(), ...settings);
+                    invocation.return_value(new GLib.Variant('()', []));
+                } catch (error) {
+                    if (!extension._highlight.owner || extension._highlight.owner === invocation.get_sender())
+                        extension._highlight.stop();
+                    invocation.return_dbus_error('es.edutictac.Lekhini.Error.Cursor', error.message);
+                }
+            },
             GetMagnifierStatus() {
                 return [extension._zoom.settings.enabled, extension._zoom.settings.zoom];
             },
@@ -86,6 +108,7 @@ export default class LekhiniPointer extends Extension {
         this._service.export(Gio.DBus.session, '/es/edutictac/Lekhini/Pointer');
         this._sessionSignal = Main.sessionMode.connect('updated', () => {
             if (Main.sessionMode.isLocked || Main.sessionMode.isGreeter) this._stopMagnifier();
+            this._highlight.position();
         });
     }
 
@@ -97,6 +120,8 @@ export default class LekhiniPointer extends Extension {
     }
 
     disable() {
+        this._highlight?.stop();
+        this._highlight = null;
         this._stopMagnifier();
         if (this._sessionSignal) Main.sessionMode.disconnect(this._sessionSignal);
         this._sessionSignal = 0;

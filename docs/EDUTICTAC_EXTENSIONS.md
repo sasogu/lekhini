@@ -26,6 +26,8 @@ En GNOME Wayland, un helper GJS compartido obtiene la posición global y,
 solo cuando los efectos de clic están activos, los botones mediante una
 extensión de GNOME Shell. No se usan coordenadas parciales de XWayland como
 seguimiento global. Instalación y pruebas en [GNOME_WAYLAND.md](./GNOME_WAYLAND.md).
+Con puente v4, el círculo se dibuja y sigue el movimiento directamente en
+GNOME; el helper de posición solo sigue activo si otras ayudas lo necesitan.
 
 Las extensiones visuales viven en `src/edutictac/` y reutilizan una
 `BrowserWindow` overlay por monitor. No crean otro sistema de ventanas, estado

@@ -2,7 +2,8 @@ import { app, ipcMain, screen } from 'electron';
 import { getState, onChange } from '../../main/hub';
 import { getOverlays } from '../../main/windows/overlay';
 import { isCursorPositionSupported, readCursorPosition } from '../platform/cursor-position';
-import { hasGnomePointer, hasGnomeMagnifier, probeGnomePointer, startGnomePointer } from '../platform/gnome-pointer';
+import { hasGnomePointer, hasGnomeMagnifier, hasGnomeCursorHighlight, probeGnomePointer, startGnomePointer } from '../platform/gnome-pointer';
+import { startGnomeCursor } from '../platform/gnome-cursor';
 
 let timer: ReturnType<typeof setInterval> | null = null;
 type NativePointerObserver = {
@@ -13,6 +14,36 @@ type NativePointerObserver = {
 let nativeObserver: NativePointerObserver | null = null;
 let nativeActive = false;
 let stopGnome: (() => void) | null = null;
+let gnomeHighlight: ReturnType<typeof startGnomeCursor> | null = null;
+let nativeHighlightActive = false;
+let nativeHighlightFailed = false;
+
+function setNativeHighlight(active: boolean): void {
+  if (active === nativeHighlightActive) return;
+  nativeHighlightActive = active;
+  for (const overlay of getOverlays().values()) {
+    if (!overlay.isDestroyed()) overlay.webContents.send('edutictac:cursor-native', active);
+  }
+  syncTracking();
+}
+
+function syncHighlight(): void {
+  const settings = getState().edutictacCursor;
+  if (!settings.enabled || !hasGnomeCursorHighlight()) {
+    gnomeHighlight?.stop();
+    gnomeHighlight = null;
+    if (!settings.enabled) nativeHighlightFailed = false;
+    setNativeHighlight(false);
+    return;
+  }
+  if (nativeHighlightFailed) return;
+  if (!gnomeHighlight) gnomeHighlight = startGnomeCursor(() => setNativeHighlight(true), () => {
+    gnomeHighlight = null;
+    nativeHighlightFailed = true;
+    setNativeHighlight(false);
+  });
+  gnomeHighlight.update(settings);
+}
 try {
   if (process.platform === 'darwin') nativeObserver = require('@edutictac/macos-pointer-observer') as NativePointerObserver;
 } catch (error) {
@@ -110,10 +141,10 @@ function startTracking(): void {
   timer = setInterval(tick, 16);
 }
 
-function sync(): void {
+function syncTracking(): void {
   const state = getState();
   const needsPosition =
-    state.edutictacCursor.enabled ||
+    (state.edutictacCursor.enabled && !nativeHighlightActive) ||
     (state.edutictacSpotlight.enabled && !state.edutictacSpotlight.locked) ||
     (process.platform === 'linux' && state.edutictacKeystrokes.enabled) ||
     (state.edutictacMagnifier.enabled && !hasGnomeMagnifier());
@@ -123,7 +154,7 @@ function sync(): void {
     isCursorPositionSupported() &&
     state.edutictacSpotlight.enabled &&
     state.edutictacSpotlight.locked &&
-    !state.edutictacCursor.enabled &&
+    (!state.edutictacCursor.enabled || nativeHighlightActive) &&
     !(process.platform === 'linux' && state.edutictacKeystrokes.enabled) &&
     (!state.edutictacMagnifier.enabled || hasGnomeMagnifier())
   ) {
@@ -138,9 +169,12 @@ function sync(): void {
   startTracking();
 }
 
+function sync(): void { syncHighlight(); syncTracking(); }
+
 export async function registerCursorTracker(): Promise<void> {
   await probeGnomePointer();
   ipcMain.handle('edutictac:cursor-supported', () => isCursorPositionSupported());
+  ipcMain.handle('edutictac:cursor-native', () => nativeHighlightActive);
   onChange((_state, changed) => {
     if (
       changed.has('edutictacCursor') ||
@@ -149,6 +183,6 @@ export async function registerCursorTracker(): Promise<void> {
       changed.has('edutictacMagnifier')
     ) sync();
   });
-  app.on('will-quit', stop);
+  app.on('will-quit', () => { gnomeHighlight?.stop(); stop(); });
   sync();
 }
