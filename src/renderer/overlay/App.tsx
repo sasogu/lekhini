@@ -339,12 +339,16 @@ export function OverlayApp() {
       void window.pen.chat.startText({ text, profile: activeProfile() });
     });
     const unShot = window.pen.overlay.onScreenshot(async ({ png }) => {
-      const out = await composite(png, committed.getCanvas());
-      await window.pen.overlay.sendScreenshotResult(out);
+      try {
+        const out = await composite(png, committed.getCanvas(), whiteboard());
+        await window.pen.overlay.sendScreenshotResult(out);
+      } catch { await window.pen.overlay.sendScreenshotResult(new Uint8Array()); }
     });
     const unSnip = window.pen.overlay.onSnip(async ({ png, rect, scaleFactor }) => {
-      const out = await compositeAndCrop(png, committed.getCanvas(), rect, scaleFactor);
-      await window.pen.overlay.sendSnipResult(out);
+      try {
+        const out = await compositeAndCrop(png, committed.getCanvas(), rect, scaleFactor, whiteboard());
+        await window.pen.overlay.sendSnipResult(out);
+      } catch { await window.pen.overlay.sendSnipResult(new Uint8Array()); }
     });
     const unSnipSel = window.pen.overlay.onSnipSelection((rect) => {
       store.getState().setSnipRect(rect);
@@ -650,6 +654,7 @@ function TextPrompt(props: { x: number; y: number; onCommit: (s: string) => void
 async function composite(
   screenPng: Uint8Array,
   annotationCanvas: HTMLCanvasElement,
+  board: Whiteboard,
 ): Promise<Uint8Array> {
   const bitmap = await pngToBitmap(screenPng);
   if (!bitmap) return new Uint8Array();
@@ -659,6 +664,10 @@ async function composite(
   const ctx = off.getContext('2d');
   if (!ctx) return new Uint8Array();
   ctx.drawImage(bitmap, 0, 0);
+  if (board !== 'off') {
+    ctx.fillStyle = board === 'white' ? '#ffffff' : '#111114';
+    ctx.fillRect(0, 0, off.width, off.height);
+  }
   ctx.drawImage(annotationCanvas, 0, 0, off.width, off.height);
   bitmap.close();
   return canvasToPng(off);
@@ -669,6 +678,7 @@ async function compositeAndCrop(
   annotationCanvas: HTMLCanvasElement,
   rect: { x: number; y: number; w: number; h: number },
   scaleFactor: number,
+  board: Whiteboard,
 ): Promise<Uint8Array> {
   const bitmap = await pngToBitmap(screenPng);
   if (!bitmap) return new Uint8Array();
@@ -685,6 +695,10 @@ async function compositeAndCrop(
     return new Uint8Array();
   }
   fctx.drawImage(bitmap, 0, 0);
+  if (board !== 'off') {
+    fctx.fillStyle = board === 'white' ? '#ffffff' : '#111114';
+    fctx.fillRect(0, 0, full.width, full.height);
+  }
   fctx.drawImage(annotationCanvas, 0, 0, full.width, full.height);
   bitmap.close();
 

@@ -28,6 +28,8 @@ esos ajustes siguen disponibles en Configuración.
 npm run typecheck
 npm run build:unpacked
 dbus-run-session -- python3 scripts/test-gnome-controls.py
+dbus-run-session -- python3 scripts/test-gnome-controls.py --capture
+dbus-run-session -- python3 scripts/test-screenshot-portal.py
 ```
 
 La prueba de GNOME aislada comprueba clics nativos en ambas barras,
@@ -36,9 +38,28 @@ limpieza, retorno al escritorio, fondos de pizarra, paleta táctil,
 preferencia persistida y vuelta a la barra normal. La captura de revisión
 contiene solamente la barra del entorno aislado.
 
+## Estado al dejar el trabajo (2026-10-14)
+
+El usuario ha confirmado dibujo, texto, limpieza y captura funcionando en
+GNOME en el ThinkPad. La captura utiliza el portal Screenshot en Wayland,
+conserva las anotaciones y los fondos, y respeta la carpeta de imágenes
+configurada en el sistema. Captura guarda una imagen PNG; todavía no guarda
+una pizarra editable. Se continúa sobre Lekhini, sin crear otra aplicación.
+
 ## Siguientes fases
 
-- Guardado y recuperación de pizarras editables.
-- Entrada de varios contactos con trazos independientes.
-- Distinción entre lápiz, dedo y palma según las capacidades del panel.
-- Validación de GNOME con panel táctil físico, varios monitores y escalado.
+Orden propuesto para retomar otro día:
+
+1. **Pizarras editables:** guardar y abrir trazos, textos y fondo para continuar
+   trabajando; mantener la captura PNG como exportación.
+2. **Autoguardado y recuperación:** recuperar la última pizarra al cerrar la
+   aplicación o tras un fallo.
+3. **Multitáctil:** gestionar varios contactos con trazos independientes.
+4. **Lápiz, dedo y palma:** distinguir herramientas y evitar marcas de la palma
+   según las capacidades reales del panel.
+5. **Validación física:** comprobar GNOME con panel táctil, varios monitores y
+   escalado. Revisar también la posición de la barra al cambiar de orientación:
+   las pruebas aisladas han mostrado fallos intermitentes.
+
+El siguiente trabajo recomendado es el guardado editable y la recuperación.
+Estas fases están pendientes; no se han implementado en esta sesión.

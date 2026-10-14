@@ -1,4 +1,5 @@
 import {
+  app,
   clipboard,
   desktopCapturer,
   dialog,
@@ -10,11 +11,14 @@ import {
 } from 'electron';
 import fs from 'node:fs';
 import path from 'node:path';
-import os from 'node:os';
+import { execFile } from 'node:child_process';
+import { promisify } from 'node:util';
+import { fileURLToPath } from 'node:url';
+import { usesWaylandSession } from '../edutictac/platform/gnome-pointer';
 import { getOverlays } from './windows/overlay';
 import { notifyStatus, onFocusRecheck, screenStatus } from './permissions';
 import { persisted } from './persistence';
-import { patch as patchHub } from './hub';
+import { patch as patchHub, getState } from './hub';
 import { startChatSession } from './ai/ipc';
 import type { ProfileId } from '../shared/types';
 
@@ -146,7 +150,22 @@ export async function askAiAboutFocusedSnip(profile: ProfileId): Promise<void> {
   startChatSession(png, 'image/png', profile);
 }
 
+let capturing = false;
+class CaptureCancelled extends Error {}
+
 export async function captureFocusedDisplay(): Promise<void> {
+  if (capturing) return;
+  capturing = true;
+  try {
+    await captureDisplay();
+  } catch (error) {
+    if (!(error instanceof CaptureCancelled)) handleCaptureFailure();
+  } finally {
+    capturing = false;
+  }
+}
+
+async function captureDisplay(): Promise<void> {
   if (!gateScreenForCapture('capture')) return;
 
   const cursorPoint = screen.getCursorScreenPoint();
@@ -185,24 +204,9 @@ export async function captureFocusedDisplay(): Promise<void> {
     return;
   }
 
-  await new Promise<void>((resolve) => {
-    const channel = 'capture:screenshot:result';
-    const handler = async (_evt: Electron.IpcMainInvokeEvent, png: Uint8Array) => {
-      ipcMain.removeHandler(channel);
-      await persistPng(Buffer.from(png));
-      resolve();
-    };
-    ipcMain.handle(channel, handler);
-    // Send the PNG as a Uint8Array — structured-clones across IPC as
-    // raw bytes (no base64 round-trip), about 33% less data than the
-    // old dataURL string and noticeably faster decode in the renderer
-    // via createImageBitmap.
-    overlay.webContents.send('overlay:screenshot', { png: screenPng });
-    setTimeout(() => {
-      ipcMain.removeHandler(channel);
-      resolve();
-    }, 8000);
-  });
+  const png = await requestComposite(overlay, 'screenshot', { png: screenPng });
+  if (!png) { handleCaptureFailure(); return; }
+  await persistPng(png);
 }
 
 // Called when desktopCapturer returns nothing. On macOS this almost
@@ -231,28 +235,66 @@ function handleCaptureFailure(): boolean {
   return false;
 }
 
+// Linux has no content protection: hide our windows so annotations are
+// composited exactly once and the toolbar does not appear in the saved image.
 async function fullDisplayPng(display: Electron.Display): Promise<Buffer | null> {
-  const sources = await desktopCapturer.getSources({
-    types: ['screen'],
-    thumbnailSize: {
-      width: display.size.width * display.scaleFactor,
-      height: display.size.height * display.scaleFactor,
-    },
-  });
-  // Match the requested display. `display_id` is reliable on macOS and
-  // Windows but typically empty on Linux/Wayland (PipeWire portal), so
-  // fall back to positional matching — getSources() returns screens in
-  // the same order as screen.getAllDisplays() — before giving up and
-  // taking the first source.
-  let matching = sources.find((s) => Number(s.display_id) === display.id);
-  if (!matching) {
-    const index = screen.getAllDisplays().findIndex((d) => d.id === display.id);
-    matching = sources[index] ?? sources[0];
+  const windows = process.platform === 'linux'
+    ? BrowserWindow.getAllWindows().filter(w => w.isVisible()) : [];
+  const drawing = getState().drawMode;
+  try {
+    if (windows.length) {
+      patchHub({ drawMode: false });
+      for (const win of windows) win.hide();
+      await waitMs(150);
+    }
+    if (usesWaylandSession()) {
+      const helper = app.isPackaged
+        ? path.join(process.resourcesPath, 'bin/gnome-screenshot-client.js')
+        : path.join(app.getAppPath(), 'native/gnome-pointer/screenshot-client.js');
+      const { stdout } = await promisify(execFile)('gjs', ['-m', helper], {
+        timeout: 125000, maxBuffer: 16384,
+      });
+      const result = JSON.parse(stdout.trim());
+      if (result.cancelled) throw new CaptureCancelled();
+      if (typeof result.uri !== 'string' || !result.uri.startsWith('file:')) return null;
+      const image = nativeImage.createFromBuffer(await fs.promises.readFile(fileURLToPath(result.uri)));
+      if (image.isEmpty()) return null;
+      // The portal returns the virtual desktop. Convert its logical monitor
+      // bounds to pixels before feeding the existing per-monitor compositor.
+      const displays = screen.getAllDisplays();
+      const left = Math.min(...displays.map(d => d.bounds.x));
+      const top = Math.min(...displays.map(d => d.bounds.y));
+      const width = Math.max(...displays.map(d => d.bounds.x + d.bounds.width)) - left;
+      const height = Math.max(...displays.map(d => d.bounds.y + d.bounds.height)) - top;
+      const size = image.getSize();
+      const sx = size.width / width, sy = size.height / height;
+      const cropped = image.crop({
+        x: Math.round((display.bounds.x - left) * sx),
+        y: Math.round((display.bounds.y - top) * sy),
+        width: Math.round(display.bounds.width * sx),
+        height: Math.round(display.bounds.height * sy),
+      });
+      return cropped.resize({
+        width: Math.round(display.size.width * display.scaleFactor),
+        height: Math.round(display.size.height * display.scaleFactor),
+      }).toPNG();
+    }
+    const sources = await desktopCapturer.getSources({
+      types: ['screen'],
+      thumbnailSize: {
+        width: Math.round(display.size.width * display.scaleFactor),
+        height: Math.round(display.size.height * display.scaleFactor),
+      },
+    });
+    const matching = sources.find(s => s.display_id === String(display.id))
+      ?? sources[screen.getAllDisplays().findIndex(d => d.id === display.id)] ?? sources[0];
+    if (!matching || matching.thumbnail.isEmpty()) return null;
+    const png = matching.thumbnail.toPNG();
+    return png.length ? png : null;
+  } finally {
+    for (const win of windows) if (!win.isDestroyed()) win.showInactive();
+    if (windows.length) patchHub({ drawMode: drawing });
   }
-  if (!matching) return null;
-  // toPNG() goes straight to a Buffer — no base64 dataURL middleman.
-  // Buffer is structured-clonable over IPC as raw bytes.
-  return matching.thumbnail.toPNG();
 }
 
 async function captureCroppedComposite(
@@ -262,23 +304,27 @@ async function captureCroppedComposite(
 ): Promise<Buffer | null> {
   const screenPng = await fullDisplayPng(display);
   if (!screenPng) return null;
+  return requestComposite(overlay, 'snip', { png: screenPng, rect, scaleFactor: display.scaleFactor });
+}
 
-  return new Promise<Buffer | null>((resolve) => {
-    const channel = 'capture:snip:result';
-    const handler = (_evt: Electron.IpcMainInvokeEvent, png: Uint8Array) => {
+function requestComposite(
+  overlay: BrowserWindow,
+  kind: 'screenshot' | 'snip',
+  payload: unknown,
+): Promise<Buffer | null> {
+  return new Promise(resolve => {
+    const channel = `capture:${kind}:result`;
+    const finish = (png: Buffer | null) => {
+      clearTimeout(timer);
       ipcMain.removeHandler(channel);
-      resolve(png && png.byteLength > 0 ? Buffer.from(png) : null);
+      resolve(png);
     };
-    ipcMain.handle(channel, handler);
-    overlay.webContents.send('overlay:snip', {
-      png: screenPng,
-      rect,
-      scaleFactor: display.scaleFactor,
+    const timer = setTimeout(() => finish(null), 8000);
+    ipcMain.handle(channel, (event, png: Uint8Array) => {
+      if (event.sender !== overlay.webContents) return;
+      finish(png?.byteLength ? Buffer.from(png) : null);
     });
-    setTimeout(() => {
-      ipcMain.removeHandler(channel);
-      resolve(null);
-    }, 8000);
+    overlay.webContents.send(`overlay:${kind}`, payload);
   });
 }
 
@@ -298,7 +344,19 @@ function defaultFilename(): string {
 }
 
 function defaultSaveDir(): string {
-  return path.join(os.homedir(), 'Pictures', 'Lekhini');
+  return path.join(app.getPath('pictures'), 'Lekhini');
+}
+
+async function withNativeDialog<T>(show: () => Promise<T>): Promise<T> {
+  const drawing = getState().drawMode;
+  const onTop = BrowserWindow.getAllWindows().filter(w => w.isAlwaysOnTop());
+  patchHub({ drawMode: false });
+  for (const win of onTop) win.setAlwaysOnTop(false);
+  try { return await show(); }
+  finally {
+    for (const win of onTop) if (!win.isDestroyed()) win.setAlwaysOnTop(true, 'screen-saver');
+    patchHub({ drawMode: drawing });
+  }
 }
 
 async function persistPng(buf: Buffer): Promise<void> {
@@ -313,11 +371,11 @@ async function persistPng(buf: Buffer): Promise<void> {
     } catch {
       // Non-fatal — showSaveDialog will still work even if mkdir failed.
     }
-    const result = await dialog.showSaveDialog({
+    const result = await withNativeDialog(() => dialog.showSaveDialog({
       title: 'Save annotated screenshot',
       defaultPath: path.join(seedDir, defaultFilename()),
       filters: [{ name: 'PNG', extensions: ['png'] }],
-    });
+    }));
     if (result.canceled || !result.filePath) return;
     target = result.filePath;
     // Remember the chosen folder so the next save can skip the dialog.

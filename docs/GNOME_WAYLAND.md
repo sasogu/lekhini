@@ -232,3 +232,32 @@ terminar no queda visible ni vuelve a aparecer al soltar el ratón. También
 se limpian la selección y los recortes activos. La prueba nativa incluye
 escritura real de texto, Enter, Escape, borrado de texto confirmado y borrado
 con el botón del ratón todavía pulsado.
+
+## Capturas de pantalla
+
+En sesiones Wayland, también cuando Electron funciona mediante XWayland,
+«Captura» utiliza `org.freedesktop.portal.Screenshot`, con un cliente GJS
+incluido en `resources/bin/gnome-screenshot-client.js`. Requiere `gjs`,
+`xdg-desktop-portal` y el backend del escritorio (`xdg-desktop-portal-gnome`
+en GNOME). El escritorio puede pedir autorización; cancelar devuelve el
+control sin guardar una imagen ni mostrar un error.
+
+Durante la captura se ocultan las ventanas de Lekhini. Después se añaden una
+sola vez las anotaciones y el fondo de pizarra. Al abrir el diálogo de guardado
+se pausa la entrada de dibujo y se libera la prioridad de las ventanas para
+poder usar el ratón. Al terminar se restaura el modo anterior.
+
+Las pruebas del protocolo usan un portal simulado en un bus D-Bus aislado:
+`dbus-run-session -- python3 scripts/test-screenshot-portal.py`. Las pruebas de
+GNOME/X11 (`dbus-run-session -- python3 scripts/test-gnome-controls.py --capture`)
+verifican el botón real, el PNG guardado, las anotaciones, el fondo
+blanco y la restauración del modo de dibujo en un escritorio temporal.
+La captura con varios monitores y distintas escalas requiere validación real.
+
+Referencia: [portal Screenshot](https://flatpak.github.io/xdg-desktop-portal/docs/doc-org.freedesktop.portal.Screenshot.html).
+
+La carpeta predeterminada de guardado se obtiene con `app.getPath('pictures')`,
+que respeta la configuración del sistema (por ejemplo, `Imatges`). Se añade
+la subcarpeta `Lekhini`. Una carpeta elegida por el usuario se conserva.
+La prueba de captura también guarda desde el diálogo en una carpeta XDG
+localizada cuyo nombre contiene espacios.
