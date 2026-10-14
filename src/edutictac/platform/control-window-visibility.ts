@@ -1,3 +1,4 @@
+import { registerDrawingControl } from './overlay-controls';
 import type { BrowserWindow } from 'electron';
 import { persisted, save } from '../../main/persistence';
 
@@ -15,6 +16,7 @@ function applyCapturePolicy(window: BrowserWindow): void {
 /** DisplayLink needs capturable pixels even on a physically attached monitor. */
 export function registerControlWindow(window: BrowserWindow): void {
   controls.add(window);
+  registerDrawingControl(window);
   window.once('closed', () => controls.delete(window));
   applyCapturePolicy(window);
 }

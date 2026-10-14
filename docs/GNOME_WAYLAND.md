@@ -180,3 +180,55 @@ Pruebas del 2026-10-13:
   añade únicamente a una copia temporal y nunca al puente instalado.
 - Typecheck y empaquetado Linux correctos. Pendiente de validación visual de
   los clics en el escritorio real tras cargar la extensión actualizada.
+
+
+## Controles durante el dibujo (2026-10-14)
+
+En GNOME se reprodujo un bloqueo de la barra al activar las anotaciones:
+la ventana transparente de dibujo interceptaba los clics destinados a la
+barra, incluso después de intentar elevarla con `moveTop()`.
+
+En Linux, los overlays reservan ahora la zona de las ventanas de control
+visibles mediante `setShape()`. La barra, sus paneles y los flyouts quedan
+fuera de la región que recibe los trazos. Las regiones se actualizan al
+mover, redimensionar, mostrar u ocultar los controles. Al pausar se restaura
+la ventana rectangular y todo el overlay deja pasar el ratón. Si el sistema
+rechaza la protección, el overlay deja pasar el ratón para conservar el
+acceso al escritorio.
+
+Pruebas de regresión:
+
+```bash
+node --test src/edutictac/platform/overlay-control-regions.test.mjs
+npm run typecheck
+npm run build:unpacked
+dbus-run-session -- python3 scripts/test-gnome-controls.py
+```
+
+La prueba de controles usa GNOME/X11 sobre un Xvfb aislado, un perfil
+temporal y clics reales inyectados exclusivamente en ese servidor. Comprueba
+activar dibujo, recibir entrada en el lienzo, pausar desde la barra, abrir
+Configuración y elegir colores con la barra vertical. Requiere Xvfb,
+GNOME Shell y libXtst. No usa la sesión gráfica del usuario.
+
+La corrección todavía debe comprobarse visualmente en el ThinkPad bajo
+GNOME Wayland con el lanzador habitual `--ozone-platform=x11`. No confundir
+la prueba aislada X11 con una validación completa de Wayland nativo.
+
+
+### Texto y limpieza del lienzo
+
+La prueba ampliada reprodujo que el campo de Texto aparecía, pero no
+recibía pulsaciones nativas. Electron no implementa `setFocusable()` en
+Linux: el overlay debe crearse como ventana enfocable. Se crea
+ahora enfocable únicamente en Linux y se muestra con `showInactive()` para
+no apropiarse del teclado al arrancar. En reposo conserva click-through.
+Al editar texto se suspenden los atajos de dibujo; Enter confirma, Escape
+cancela y después se recuperan los atajos. Al terminar se libera el foco.
+
+`Clear all` detiene el trazo capturado antes de borrar, limpia la capa de
+vista previa y cancela el texto/reconocimiento pendiente. Así un trazo a medio
+terminar no queda visible ni vuelve a aparecer al soltar el ratón. También
+se limpian la selección y los recortes activos. La prueba nativa incluye
+escritura real de texto, Enter, Escape, borrado de texto confirmado y borrado
+con el botón del ratón todavía pulsado.

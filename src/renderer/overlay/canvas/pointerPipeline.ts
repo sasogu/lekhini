@@ -15,11 +15,14 @@ export interface PipelineHandlers {
   onUp(sample: PointerSample, e: PointerEvent): void;
 }
 
-export function attachPointerPipeline(target: HTMLElement, handlers: PipelineHandlers): () => void {
+type PointerPipeline = (() => void) & { stop(): void };
+
+export function attachPointerPipeline(target: HTMLElement, handlers: PipelineHandlers): PointerPipeline {
   let drawing = false;
   let buffer: PointerSample[] = [];
   let rafId: number | null = null;
   let lastMoveEvent: PointerEvent | null = null;
+  let lastPointerEvent: PointerEvent | null = null;
 
   const flush = () => {
     rafId = null;
@@ -46,6 +49,7 @@ export function attachPointerPipeline(target: HTMLElement, handlers: PipelineHan
   const onDown = (e: PointerEvent) => {
     if (e.button !== 0) return;
     drawing = true;
+    lastPointerEvent = e;
     target.setPointerCapture(e.pointerId);
     handlers.onDown(toSample(e), e);
   };
@@ -53,6 +57,7 @@ export function attachPointerPipeline(target: HTMLElement, handlers: PipelineHan
   const onMove = (e: PointerEvent) => {
     if (!drawing) return;
     lastMoveEvent = e;
+    lastPointerEvent = e;
     const coalesced = typeof e.getCoalescedEvents === 'function' ? e.getCoalescedEvents() : [];
     if (coalesced.length > 0) {
       for (const ce of coalesced) buffer.push(toSample(ce));
@@ -83,11 +88,16 @@ export function attachPointerPipeline(target: HTMLElement, handlers: PipelineHan
   target.addEventListener('pointerup', onUp);
   target.addEventListener('pointercancel', onUp);
 
-  return () => {
+  const detach = () => {
+    if (rafId !== null) cancelAnimationFrame(rafId);
     target.removeEventListener('pointerdown', onDown);
     target.removeEventListener('pointermove', onMove);
     target.removeEventListener('pointerup', onUp);
     target.removeEventListener('pointercancel', onUp);
-    if (rafId !== null) cancelAnimationFrame(rafId);
   };
+  return Object.assign(detach, {
+    stop() {
+      if (drawing && lastPointerEvent) onUp(lastPointerEvent);
+    },
+  });
 }

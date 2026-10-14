@@ -321,7 +321,16 @@ export function OverlayApp() {
 
     const unUndo = window.pen.overlay.onUndo(() => store.getState().undo());
     const unRedo = window.pen.overlay.onRedo(() => store.getState().redo());
-    const unClear = window.pen.overlay.onClear(() => store.getState().clear());
+    const unClear = window.pen.overlay.onClear(() => {
+      // Finish any captured stroke before clearing, so it cannot reappear
+      // on a delayed pointerup or remain in the live preview canvas.
+      detach.stop();
+      cancelRecognition();
+      live.clear();
+      const editing = prompt();
+      if (editing) { editing.onCommit(''); setPrompt(null); }
+      store.getState().clear();
+    });
     // Trader hybrid: compute the drawn fib / trendline levels as text
     // and open a text-only analysis chat (no chart image is sent).
     const unAnalyze = window.pen.overlay.onAnalyze(() => {

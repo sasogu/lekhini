@@ -1,6 +1,8 @@
 import { BrowserWindow, Display, ipcMain, screen } from 'electron';
 import path from 'node:path';
-import { subscribe } from '../hub';
+import { getState, subscribe } from '../hub';
+import { registerDrawingHotkeys, registerEscapeWhileDrawing } from '../hotkeys';
+import { registerDrawingOverlay, protectDrawingControls } from '../../edutictac/platform/overlay-controls';
 
 const overlays = new Map<number, BrowserWindow>();
 
@@ -20,7 +22,10 @@ export function createOverlayForDisplay(display: Display): BrowserWindow {
     minimizable: false,
     maximizable: false,
     fullscreenable: false,
-    focusable: false,
+    // Linux cannot change focusability after creation. Text input needs a
+    // managed window; showInactive + click-through keep idle overlays passive.
+    focusable: process.platform === 'linux',
+    acceptFirstMouse: true,
     skipTaskbar: true,
     show: false,
     backgroundColor: '#00000000',
@@ -47,7 +52,8 @@ export function createOverlayForDisplay(display: Display): BrowserWindow {
   });
   win.once('ready-to-show', () => {
     console.log(`[pen] overlay ${displayId} ready-to-show`);
-    win.show();
+    if (process.platform === 'linux') win.showInactive();
+    else win.show();
   });
 
   if (VITE_DEV_SERVER_URL) {
@@ -62,6 +68,7 @@ export function createOverlayForDisplay(display: Display): BrowserWindow {
 
   subscribe(win);
   overlays.set(displayId, win);
+  registerDrawingOverlay(win);
   win.once('closed', () => overlays.delete(displayId));
 
   return win;
@@ -72,10 +79,11 @@ export function getOverlays(): Map<number, BrowserWindow> {
 }
 
 export function setDrawMode(enabled: boolean) {
+  protectDrawingControls(enabled);
   for (const win of overlays.values()) {
     if (win.isDestroyed()) continue;
     if (enabled) {
-      win.setIgnoreMouseEvents(false);
+      if (process.platform !== 'linux') win.setIgnoreMouseEvents(false);
       // The 'screen-saver' z-level only exists on macOS; on Windows and
       // Linux another topmost window (or a fullscreen app) can slip
       // above the overlay. Re-asserting on every draw-mode entry pushes
@@ -127,13 +135,21 @@ export function registerOverlayIpc() {
   ipcMain.handle('overlay:request-focus', (event) => {
     const win = BrowserWindow.fromWebContents(event.sender);
     if (win) {
-      win.setFocusable(true);
+      // Native editing must receive Escape and ordinary editing shortcuts.
+      registerEscapeWhileDrawing(false);
+      registerDrawingHotkeys(false);
+      if (process.platform !== 'linux') win.setFocusable(true);
       win.focus();
     }
   });
 
   ipcMain.handle('overlay:release-focus', (event) => {
     const win = BrowserWindow.fromWebContents(event.sender);
-    if (win) win.setFocusable(false);
+    if (win) {
+      if (process.platform === 'linux') win.blur();
+      else win.setFocusable(false);
+      registerDrawingHotkeys(getState().drawMode);
+      registerEscapeWhileDrawing(getState().drawMode);
+    }
   });
 }

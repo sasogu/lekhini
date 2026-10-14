@@ -123,8 +123,10 @@ export const store = createStore<Store>((set, get) => ({
 
   clear() {
     const { items, past } = get();
-    if (items.length === 0) return;
-    set({ items: [], past: [...past, items].slice(-HISTORY_LIMIT), future: [] });
+    const { selectedId, snipRect } = get();
+    if (items.length === 0 && selectedId === null && snipRect === null) return;
+    set({ items: [], selectedId: null, snipRect: null,
+      past: items.length ? [...past, items].slice(-HISTORY_LIMIT) : past, future: [] });
   },
 
   setActiveTool(tool) {
