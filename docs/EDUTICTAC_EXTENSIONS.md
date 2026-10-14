@@ -15,7 +15,7 @@ su hub, persistencia y overlays multimonitor.
 | Dock de macOS | Implementado | macOS | [MACOS_DEVELOPMENT.md](./MACOS_DEVELOPMENT.md) |
 | Firma estable de desarrollo | Configurada en el Mac de pruebas | macOS | [MACOS_DEVELOPMENT.md](./MACOS_DEVELOPMENT.md) |
 | Magnifier | Lente regional macOS y zoom nativo GNOME; pruebas aisladas pasadas | ScreenCaptureKit en macOS; zoom del escritorio en GNOME 48 con puente v3 | [MAGNIFIER.md](./MAGNIFIER.md), [GNOME_WAYLAND.md](./GNOME_WAYLAND.md) |
-| Keystrokes | Implementada y probada | macOS; modo «solo atajos» recomendado | [KEYSTROKES.md](./KEYSTROKES.md) |
+| Keystrokes | Proveedores macOS y Linux; filtrado y autorización probados | macOS y Linux/GNOME con observador Polkit; solo atajos en Linux | [KEYSTROKES.md](./KEYSTROKES.md) |
 | Teacher Mode | Implementado y probado | Coordina herramientas existentes | [TEACHER_MODE.md](./TEACHER_MODE.md) |
 | Presets EduTicTac | No implementados | Pendiente | — |
 | Shortcuts configurables | No implementados | Solo existe el bloqueo fijo de Spotlight | — |

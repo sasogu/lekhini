@@ -1,6 +1,10 @@
 import { app, ipcMain, screen, shell } from 'electron';
 import { getState, onChange, patch } from '../../main/hub';
 import { getOverlays } from '../../main/windows/overlay';
+import { onCursorPosition, type CursorPosition } from '../cursor/tracker';
+import { LinuxShortcutObserver } from './linux-observer';
+import { isCursorPositionSupported } from '../platform/cursor-position';
+import { usesWaylandSession, hasGnomePointer, probeGnomePointer } from '../platform/gnome-pointer';
 
 type NativeKeyEvent = { keyCode: number; flags: number };
 type NativeShortcutObserver = {
@@ -37,6 +41,14 @@ const specialKeys = new Set([
 ]);
 
 let observer: NativeShortcutObserver | null = null;
+let lastPosition: CursorPosition | null = null;
+const linuxObserver = new LinuxShortcutObserver((label) => {
+  if (!getState().edutictacKeystrokes.enabled || !lastPosition) return;
+  const overlay = getOverlays().get(lastPosition.displayId);
+  if (overlay && !overlay.isDestroyed()) overlay.webContents.send('edutictac:keystroke', {
+    label, id: `${Date.now()}-${Math.random()}`,
+  });
+}, () => patch({ edutictacKeystrokes: { enabled: false } }));
 try {
   if (process.platform === 'darwin') observer = require('@edutictac/macos-shortcut-observer') as NativeShortcutObserver;
 } catch (error) {
@@ -55,10 +67,25 @@ function formatShortcut(event: NativeKeyEvent, onlyShortcuts: boolean): string |
   return `${modifiers.join('')}${key}`;
 }
 
-function stop(): void { observer?.stop(); }
+function stop(): void { observer?.stop(); linuxObserver.stop(); }
 
 function sync(): void {
   const settings = getState().edutictacKeystrokes;
+  if (process.platform === 'linux') {
+    if (!settings.enabled) { linuxObserver.pause(); return; }
+    if (!usesWaylandSession() || !hasGnomePointer()) {
+      linuxObserver.pause();
+      patch({ edutictacKeystrokes: { enabled: false } });
+      return;
+    }
+    if (!linuxObserver.hasPermission()) {
+      void linuxObserver.authorize().then(granted => {
+        if (!granted) patch({ edutictacKeystrokes: { enabled: false } });
+        else if (getState().edutictacKeystrokes.enabled && lastPosition) linuxObserver.resume();
+      });
+    } else if (lastPosition) linuxObserver.resume();
+    return;
+  }
   if (!observer || process.platform !== 'darwin' || !settings.enabled || !observer.hasPermission()) {
     stop();
     return;
@@ -77,9 +104,25 @@ function sync(): void {
 }
 
 export function registerMacShortcutObserver(): void {
+  if (process.platform === 'linux') patch({ edutictacKeystrokes: { enabled: false, onlyShortcuts: true } });
+  const unsubscribePosition = onCursorPosition(point => {
+    lastPosition = point;
+    if (process.platform !== 'linux' || !getState().edutictacKeystrokes.enabled) return;
+    if (point) linuxObserver.resume();
+    else linuxObserver.pause(); // close keyboard devices while GNOME is locked/unavailable
+  });
   ipcMain.handle('edutictac:keystrokes:status', () =>
-    !!observer && process.platform === 'darwin' && observer.hasPermission());
-  ipcMain.handle('edutictac:keystrokes:request', () => {
+    process.platform === 'linux' ? linuxObserver.hasPermission() :
+      !!observer && process.platform === 'darwin' && observer.hasPermission());
+  ipcMain.handle('edutictac:keystrokes:request', async () => {
+    if (process.platform === 'linux') {
+      if (!usesWaylandSession()) return false;
+      if (usesWaylandSession() && !hasGnomePointer()) await probeGnomePointer();
+      if (!hasGnomePointer() || !isCursorPositionSupported()) return false;
+      const granted = await linuxObserver.authorize();
+      if (granted) patch({ edutictacKeystrokes: { enabled: true, onlyShortcuts: true } });
+      return granted;
+    }
     if (!observer || process.platform !== 'darwin') return false;
     if (!observer.hasPermission()) observer.requestPermission();
     const granted = observer.hasPermission();
@@ -92,6 +135,6 @@ export function registerMacShortcutObserver(): void {
     }
   });
   onChange((_state, changed) => { if (changed.has('edutictacKeystrokes')) sync(); });
-  app.on('will-quit', stop);
+  app.on('will-quit', () => { unsubscribePosition(); stop(); });
   sync();
 }

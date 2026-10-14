@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE policyconfig PUBLIC "-//freedesktop//DTD PolicyKit Policy Configuration 1.0//EN" "http://www.freedesktop.org/standards/PolicyKit/1/policyconfig.dtd">
+<policyconfig>
+  <vendor>EduTicTac</vendor>
+  <action id="es.edutictac.lekhini.shortcuts">
+    <description>Observe keyboard shortcuts for Lekhini</description>
+    <message>Allow Lekhini to show keyboard shortcuts during this session</message>
+    <message xml:lang="es">Permitir a Lekhini mostrar los atajos del teclado durante esta sesión</message>
+    <defaults><allow_any>no</allow_any><allow_inactive>no</allow_inactive><allow_active>auth_admin</allow_active></defaults>
+    <annotate key="org.freedesktop.policykit.exec.path">/opt/lekhini-shortcuts/bin/shortcut-observer</annotate>
+  </action>
+</policyconfig>

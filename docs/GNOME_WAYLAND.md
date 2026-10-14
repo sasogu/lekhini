@@ -74,8 +74,8 @@ Esto se comprobó con un dispositivo virtual dentro del compositor de prueba.
 Una extensión de versión 1 sigue proporcionando el círculo a la aplicación
 nueva, pero no los clics. Tras actualizar la extensión, cerrar sesión y volver
 a entrar para cargar la versión 2. Activar **EduTicTac / Click effects → On**;
-puede incluirse también en Teacher Mode. La visualización de teclas sigue
-necesitando su proveedor de macOS.
+puede incluirse también en Teacher Mode. La visualización de atajos dispone
+de un [observador Linux autorizado mediante Polkit](./KEYSTROKES.md#gnome--linux).
 
 ## Spotlight y zoom del escritorio (versión 3)
 

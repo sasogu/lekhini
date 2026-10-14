@@ -43,6 +43,10 @@ files:
 # Bundled per-profile RAG seed examples ("intent files"), read at
 # runtime from process.resourcesPath/intent.
 extraResources:
+  - from: native/linux-shortcuts/build
+    to: linux-shortcuts/build
+  - from: native/linux-shortcuts/es.edutictac.lekhini.shortcuts.policy
+    to: linux-shortcuts/es.edutictac.lekhini.shortcuts.policy
   - from: native/gnome-pointer/client.js
     to: bin/gnome-pointer-client.js
   - from: native/gnome-pointer/buttons.mjs

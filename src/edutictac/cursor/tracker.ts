@@ -115,6 +115,7 @@ function sync(): void {
   const needsPosition =
     state.edutictacCursor.enabled ||
     (state.edutictacSpotlight.enabled && !state.edutictacSpotlight.locked) ||
+    (process.platform === 'linux' && state.edutictacKeystrokes.enabled) ||
     (state.edutictacMagnifier.enabled && !hasGnomeMagnifier());
   // A locked spotlight deliberately keeps the last point visible. Stop
   // polling without sending the normal null/clear event to that overlay.
@@ -123,6 +124,7 @@ function sync(): void {
     state.edutictacSpotlight.enabled &&
     state.edutictacSpotlight.locked &&
     !state.edutictacCursor.enabled &&
+    !(process.platform === 'linux' && state.edutictacKeystrokes.enabled) &&
     (!state.edutictacMagnifier.enabled || hasGnomeMagnifier())
   ) {
     pause();
@@ -143,6 +145,7 @@ export async function registerCursorTracker(): Promise<void> {
     if (
       changed.has('edutictacCursor') ||
       changed.has('edutictacSpotlight') ||
+      changed.has('edutictacKeystrokes') ||
       changed.has('edutictacMagnifier')
     ) sync();
   });

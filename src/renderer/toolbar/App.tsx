@@ -1014,10 +1014,14 @@ export function ToolbarApp() {
       setClickPermissionGranted(granted);
       if (!granted) return;
     }
-    if (teacher.keystrokes && !keyPermissionGranted()) {
-      const granted = await window.pen.keystrokes.requestPermission();
-      setKeyPermissionGranted(granted);
-      if (!granted) return;
+    if (teacher.keystrokes) {
+      const ready = await window.pen.keystrokes.hasPermission();
+      setKeyPermissionGranted(ready);
+      if (!ready) {
+        const granted = await window.pen.keystrokes.requestPermission();
+        setKeyPermissionGranted(granted);
+        if (!granted) return;
+      }
     }
     await window.pen.hub.update({ edutictacTeacherMode: { enabled: true } });
   };
@@ -1521,13 +1525,15 @@ export function ToolbarApp() {
                       setKeyPermissionGranted(granted);
                     } finally { setKeyPermissionPending(false); }
                   }}>
-                  <span>{hub().edutictacKeystrokes.enabled ? 'On' : keyPermissionPending() ? 'Check macOS permission…' : 'Off'}</span>
+                  <span>{hub().edutictacKeystrokes.enabled ? 'On' : keyPermissionPending() ? 'Waiting for authorization…' : 'Off'}</span>
                 </button>
               </div>
               <div class="settings-hint">
-                Shows temporary key combinations locally. It never reads characters, stores text or keeps a history.
+                {platform() === 'linux'
+                  ? 'Shows shortcuts and special keys only. GNOME asks for authorization when enabled. Stops observing when switched off or the screen is locked.'
+                  : 'Shows temporary key combinations locally. It never reads characters, stores text or keeps a history.'}
               </div>
-              <Show when={!keyPermissionGranted()}>
+              <Show when={isMac() && !keyPermissionGranted()}>
                 <div class="settings-row">
                   <span class="settings-row-label">Permission</span>
                   <button class="settings-toggle" onClick={() => void window.pen.keystrokes.openSettings()}>
@@ -1538,6 +1544,7 @@ export function ToolbarApp() {
               <div class="settings-row">
                 <span class="settings-row-label">Only shortcuts</span>
                 <button class={`settings-toggle ${hub().edutictacKeystrokes.onlyShortcuts ? 'on' : ''}`}
+                  disabled={platform() === 'linux'}
                   onClick={() => void window.pen.hub.update({
                     edutictacKeystrokes: { onlyShortcuts: !hub().edutictacKeystrokes.onlyShortcuts },
                   })}>
